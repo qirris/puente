@@ -2,6 +2,12 @@
 
 Tu bandeja privada para enviar enlaces, notas, fotos y archivos entre el móvil y el ordenador.
 
+## ¿Por qué hice Puente?
+
+Lo hice para mí, porque lo necesitaba. Siempre me encontraba con el mismo problema: tener que subir archivos a un servicio u otro para pasarlos del móvil al ordenador y volver, y eso se me hacía incómodo y poco privado. Quería una bandeja sencilla, mía, donde dejar enlaces, notas, fotos y archivos y olvidarme del resto.
+
+Puente fue desarrollada con asistencia de inteligencia artificial. Yo definí qué necesitaba y revisé las decisiones; la IA me ayudó a escribir el código, los textos y a resolver los detalles técnicos.
+
 ## Arquitectura
 
 | Parte | Tecnología | Nombre en Cloudflare |
@@ -44,6 +50,7 @@ npm run deploy
 
 El Worker sirve automáticamente el contenido de `dist/` y la API en `/api/*`.
 La limpieza de envíos caducados corre cada hora mediante el cron `17 * * * *`.
+La versión desplegada está en https://puente-api.qirris.workers.dev.
 
 ## Comprobación rápida de la API
 
