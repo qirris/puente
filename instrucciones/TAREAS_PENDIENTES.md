@@ -41,6 +41,13 @@
 - [x] Publicar tag y release `v1.0.0` y ajustar la configuración de GitHub.
 - [x] Limitar Dependabot a actualizaciones menores y añadir una captura al README.
 
+## Mejoras posteriores a v1.0.0
+- [x] Alojar Fraunces y Manrope en `public/fuentes/` y quitar Google Fonts de la CSP.
+- [ ] Añadir búsqueda y filtros por tipo en la bandeja.
+- [ ] Listar y cerrar sesiones activas.
+- [ ] Código de recuperación de contraseña mostrado una sola vez.
+- [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
+
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.
 

@@ -23,7 +23,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Worker: `puente-api`. Cron de limpieza: `17 * * * *`.
 - Sesiones propias en la tabla `sesiones` (tokens aleatorios de 32 bytes guardados en D1).
 - Contraseñas con PBKDF2-SHA256 (100 000 iteraciones, el máximo de Cloudflare Workers) mediante Web Crypto. El hash guarda las iteraciones usadas para verificar cuentas antiguas.
-- Diseño editorial minimalista con `Fraunces` y `Manrope`.
+- Diseño editorial minimalista con `Fraunces` y `Manrope`, alojadas en `public/fuentes/` (WOFF2 con licencia OFL); la interfaz no pide fuentes a Google.
 - Módulos principales:
   - `src/index.ts`: API completa del Worker.
   - `src/lib/api.ts`: cliente HTTP con token Bearer.
@@ -56,6 +56,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Limpieza de caducados: cron del Worker y ruta manual `/api/limpieza`.
 - Interfaz responsive (móvil y escritorio).
 - Instalable como aplicación (PWA): manifiesto, iconos PNG y service worker que guarda solo la interfaz, nunca la API.
+- Fuentes locales: la interfaz carga los WOFF2 desde `/fuentes/` sin peticiones a terceros.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -78,6 +79,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: creadas 32 pruebas automáticas con Vitest y una base SQLite/KV falsa; `npm test` pasa con código 0. `formatBytes` corregido para mostrar «1,5 KB» en lugar de «2 KB».
 - 19/11/2026: documentación ampliada con `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `instrucciones/ARQUITECTURA.md`, `SEGURIDAD.md`, `PRUEBAS.md`, `DECISIONES.md` y `docs/OPERACIONES.md`. `supabase/` movido a `docs/historial/supabase/` con una nota de por qué se conserva.
 - 19/11/2026: `@types/node` movido a `devDependencies`, añadidos metadatos del paquete, `engines`, `.nvmrc`, CI y Dependabot.
+- 19/11/2026: fuentes locales: WOFF2 de Fraunces (normal e itálica) y Manrope guardados en `public/fuentes/` con sus licencias OFL; eliminados los `<link>` a Google Fonts, declarados los `@font-face` en `src/styles.css` y simplificada la CSP a `font-src 'self'`.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -92,6 +94,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - El token de sesión sigue en la URL de las imágenes porque el usuario rechazó el cambio a cookies; se mitiga con `Referrer-Policy: no-referrer` y `Cache-Control: no-store`.
 - CORS restringido al mismo origen: la interfaz se sirve desde el propio Worker, así que no se necesita `Access-Control-Allow-Origin: *`.
 - `run_worker_first = true` en los recursos estáticos para que el Worker pueda añadir cabeceras de seguridad a la interfaz.
+- Las fuentes se alojan en el propio proyecto: evitan dependencias de terceros y permiten una CSP más estricta sin dominios de Google.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -107,6 +110,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: en remoto, registro sin código devuelve 403, con código 201, acceso correcto 200, sesión con token en URL 200 y limpieza manual 200; la cuenta temporal se borró de D1.
 - 19/11/2026: CI de GitHub en verde en `master`. Configurados homepage, Dependabot, secret scanning con push protection, protección de `master`, tag `v1.0.0` y release `v1.0.0`.
 - 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
+- 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -129,6 +133,12 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Cerrar la seguridad sin cambiar el token de URL por cookies.
 - [x] Añadir CI, dependencias y documentación de operaciones.
 - [x] Añadir tag y release v1.0.0 y ajustar la configuración de GitHub.
+- [x] Alojar las fuentes localmente y quitar Google Fonts de la CSP.
+- [ ] Añadir búsqueda y filtros por tipo en la bandeja.
+- [ ] Listar y cerrar sesiones activas.
+- [ ] Código de recuperación de contraseña mostrado una sola vez.
+- [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
+- [ ] Publicar v1.1.0 con las mejoras anteriores.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
@@ -136,3 +146,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 18/11/2026: traslado a `Documents\NEGOCIOS` y cambio de rumbo a Cloudflare.
 - 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub, publicación segura con licencia MIT, ámbito personal y registro protegido, e instalación como aplicación.
 - 19/11/2026: revisión profesional integral: pruebas automáticas, seguridad reforzada sin cookies, documentación completa, integración continua, observabilidad y cierre de GitHub con versión 1.0.0.
+- 19/11/2026: primera mejora posterior a v1.0.0: fuentes Fraunces y Manrope alojadas en el proyecto, sin peticiones a Google y con CSP simplificada.

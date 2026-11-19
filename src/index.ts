@@ -99,8 +99,8 @@ const POLITICA_SEGURIDAD = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "script-src 'self'",
-  "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' blob: data:",
   "connect-src 'self'",
 ].join('; ')

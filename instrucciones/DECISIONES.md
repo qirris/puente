@@ -55,6 +55,13 @@ La interfaz se sirve desde el mismo Worker, así que `Access-Control-Allow-Origi
 *` no aportaba nada y ampliaba la superficie de ataque. Se eliminó y se añadieron
 CSP, `X-Frame-Options`, `nosniff` y `Referrer-Policy` en todas las respuestas.
 
+## 19/11/2026 · Fuentes alojadas en el proyecto
+
+La interfaz pedía Fraunces y Manrope a Google Fonts. Se guardaron los WOFF2, con
+su licencia OFL, en `public/fuentes/` y se declararon con `@font-face`. Así no
+dependemos de un tercero para mostrar la interfaz y la CSP queda en
+`font-src 'self'`.
+
 ## 19/11/2026 · Despliegue manual, CI solo de comprobación
 
 GitHub Actions comprueba tipos y pruebas, pero no despliega. El despliegue se

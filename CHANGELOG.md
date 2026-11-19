@@ -5,7 +5,10 @@ y [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [No publicado]
 
-Nada pendiente por ahora.
+### Cambiado
+
+- Fraunces y Manrope se sirven desde `public/fuentes/`; la interfaz ya no pide
+  fuentes a Google y la CSP solo permite fuentes del mismo origen.
 
 ## [1.0.0] - 2026-11-19
 

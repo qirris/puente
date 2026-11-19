@@ -13,7 +13,7 @@ Navegador (React)
 Cloudflare Worker  puente-api
    ├── D1      puente-datos   → users, sesiones, items, intentos_acceso
    ├── KV      puente-archivos → bytes de fotos y archivos
-   └── Assets  dist/          → interfaz, manifiesto PWA y service worker
+   └── Assets  dist/          → interfaz, fuentes, manifiesto PWA y service worker
 ```
 
 ## Módulos del cliente (`src/`)

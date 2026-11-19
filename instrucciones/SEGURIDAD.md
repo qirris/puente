@@ -36,8 +36,9 @@ La tabla `intentos_acceso` se crea en `migrations/0003_intentos_acceso.sql`.
   `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff` y
   `X-Frame-Options: DENY`.
 - La interfaz y el service worker reciben además una CSP con `default-src
-  'self'`, `frame-ancestors 'none'` y orígenes explícitos para fuentes de
-  Google. Los archivos privados llevan `Cache-Control: private`.
+  'self'`, `frame-ancestors 'none'` y `font-src 'self'`: las fuentes se sirven
+  desde `public/fuentes/`, sin peticiones a terceros. Los archivos privados
+  llevan `Cache-Control: private`.
 
 ## Limitación conocida: el token en la URL
 
