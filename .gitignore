@@ -13,5 +13,5 @@ Thumbs.db
 
 .vercel/
 .netlify/
-supabase/.temp/
-supabase/.branches/
+docs/historial/supabase/.temp/
+docs/historial/supabase/.branches/

@@ -26,13 +26,27 @@
 - [x] Añadir manifiesto PWA, iconos PNG y service worker para instalar Puente como aplicación.
 - [x] Documentar la instalación en Windows y en el móvil.
 
+## Revisión profesional (19/11/2026)
+- [x] Arreglar `npm test`: 32 pruebas con Vitest, SQLite en memoria y KV falso.
+- [x] Corregir el README (código de invitación, secretos, límite de intentos y Node 24).
+- [x] Crear `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `docs/OPERACIONES.md` y los cuatro documentos que faltaban en `instrucciones/`.
+- [x] Mover el historial de Supabase a `docs/historial/supabase/`.
+- [x] Restringir CORS, añadir cabeceras de seguridad y límite de 5 intentos en 15 minutos.
+- [x] Aplicar la migración `0003_intentos_acceso.sql` en local y remoto.
+- [x] Mantener el token en la URL de imágenes; descartada la cookie por decisión del usuario.
+- [x] Añadir observabilidad y `run_worker_first` al Worker.
+- [x] Mover `@types/node` a dependencias de desarrollo, añadir `engines` y `.nvmrc`.
+- [x] Añadir integración continua y Dependabot.
+- [x] Verificar cabeceras, CORS, 429, registro y acceso en la URL pública.
+- [x] Publicar tag y release `v1.0.0` y ajustar la configuración de GitHub.
+
 ## Prueba final del usuario
-- [ ] Crear la cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y probar envío entre móvil y ordenador.
+- [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.
 
 ## Histórico (Supabase, superado el 19/11/2026)
 - [x] Desarrollo del MVP original (React 19 + TypeScript + Supabase).
 - [x] Migraciones SQL, RLS y Storage originales.
 - [x] Verificación de compilación original.
 
-> El directorio `supabase/` se conserva solo como referencia histórica. El código
-> activo es `src/index.ts` + `migrations/` + `wrangler.toml`.
+> El directorio `docs/historial/supabase/` se conserva solo como referencia
+> histórica. El código activo es `src/index.ts` + `migrations/` + `wrangler.toml`.

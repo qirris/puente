@@ -28,18 +28,36 @@ solo usuario y depende de las cuotas gratuitas de Cloudflare.
 | Datos | D1 (SQLite) | `puente-datos` |
 | Archivos | Workers KV (espacio de nombres privado) | `puente-archivos` |
 
-Todo se sirve desde el mismo Worker. No hay claves secretas que configurar: las
-contraseñas se guardan como hash en D1 y las sesiones son tokens aleatorios
-también en D1.
+Todo se sirve desde el mismo Worker. No se necesitan claves de terceros: las
+contraseñas se guardan como hash PBKDF2 en D1 y las sesiones son tokens
+aleatorios también en D1. El único secreto de la aplicación es el código de
+invitación, que se configura en Cloudflare como `PUENTE_CODIGO_INVITACION` y
+nunca se versiona.
+
+### Seguridad
+
+- Contraseñas con PBKDF2-SHA256 de 100 000 iteraciones y sal aleatoria.
+- Sesiones aleatorias de 32 bytes guardadas en D1, con caducidad de 30 días.
+- Bloqueo de 15 minutos tras 5 accesos fallidos por correo y dirección IP.
+- CORS restringido al mismo origen y cabeceras de seguridad en todas las
+  respuestas (`Referrer-Policy: no-referrer`, CSP, `X-Frame-Options`, `nosniff`).
+- El token de sesión viaja en la URL de las vistas previas de imagen. Es una
+  limitación conocida y asumida; se mitiga con `Referrer-Policy: no-referrer` y
+  `Cache-Control: no-store`. No se ha sustituido por cookies por decisión
+  propia del proyecto.
+
+Los detalles están en `SECURITY.md` y `instrucciones/SEGURIDAD.md`.
 
 ## Desarrollo local
 
-Necesitas Node.js 20 o superior.
+Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 
 ```bash
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
+npm test            # 32 pruebas automáticas
+npm run build       # comprueba tipos y genera dist/
 ```
 
 Vite redirige `/api` al puerto 8787, así que no hace falta configurar nada.
@@ -86,11 +104,16 @@ recargado una vez después del despliegue.
 ```bash
 curl -X POST http://localhost:8787/api/registro \
   -H 'Content-Type: application/json' \
-  -d '{"email":"tu@email.com","password":"123456"}'
+  -d '{"email":"tu@email.com","password":"123456","codigo":"TU_CODIGO_DE_INVITACION"}'
 ```
 
+Sustituye `TU_CODIGO_DE_INVITACION` por el valor del secreto
+`PUENTE_CODIGO_INVITACION`. En desarrollo local, si no configuras ese secreto,
+el campo `codigo` no hace falta y el registro queda abierto.
+
 La respuesta incluye un `token`. Úsalo como `Authorization: Bearer <token>`
-para el resto de la API.
+para el resto de la API. Tras 5 accesos fallidos seguidos desde la misma IP y
+con el mismo correo, la API responde 429 durante 15 minutos.
 
 ## Estructura
 
@@ -100,7 +123,19 @@ para el resto de la API.
 - `public/sw.js` — caché mínima de la interfaz; nunca guarda la API.
 - `public/icon-*.png` — iconos para el escritorio y el móvil.
 - `migrations/` — esquema de D1.
-- `supabase/` — migraciones antiguas, conservadas solo como referencia histórica.
+- `tests/` — base de datos y KV falsos para las pruebas del Worker.
+- `docs/historial/supabase/` — migraciones antiguas, solo como referencia histórica.
 - `wrangler.toml` — configuración de Cloudflare.
+
+## Documentación
+
+- `SECURITY.md` — cómo informar de un problema de seguridad.
+- `CHANGELOG.md` — cambios por versión.
+- `CONTRIBUTING.md` — cómo colaborar y convenciones de commits.
+- `docs/OPERACIONES.md` — copias, restauración, despliegue y rollback.
+- `instrucciones/ARQUITECTURA.md` — módulos y flujo de datos.
+- `instrucciones/SEGURIDAD.md` — decisiones y medidas aplicadas.
+- `instrucciones/PRUEBAS.md` — qué se prueba y cómo verificar en remoto.
+- `instrucciones/DECISIONES.md` — por qué se eligió cada opción.
 
 Todo el proyecto está en español.

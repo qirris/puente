@@ -1,5 +1,5 @@
 -- Puente · esquema inicial para Cloudflare D1 (SQLite)
--- Traducción fiel de supabase/migrations/20261116090000_puente_schema.sql
+-- Traducción fiel de docs/historial/supabase/migrations/20261116090000_puente_schema.sql
 -- a dialecto SQLite. Sin secretos.
 --
 -- Nota: Supabase delegaba la identidad en auth.users y la seguridad en RLS.
