@@ -113,6 +113,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Resuelto: `npm test` antes fallaba por falta de archivos de prueba; ahora hay 32 pruebas y termina con código 0.
 - Las respuestas HEAD de `/` pueden mostrar cabeceras antiguas durante unos minutos por caché de Cloudflare; las peticiones GET reales sí incluyen las cabeceras nuevas.
 - Al inspeccionar la D1 remota se encontró la cuenta real del usuario (creada a las 14:57). No se borró. La consulta mostró su token de sesión en la salida, así que se invalidó esa sesión por precaución; el usuario debe volver a iniciar sesión.
+- El aviso privado de vulnerabilidades de GitHub no se pudo activar con el token disponible; `SECURITY.md` contempla el contacto privado alternativo.
 - KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en aparecer en otra ubicación.
 
 ## 10. Próximos pasos

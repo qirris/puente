@@ -13,10 +13,11 @@ un problema de seguridad.
 
 ## Cómo informar de una vulnerabilidad
 
-**No publiques el detalle en un issue ni en una discusión pública.** Usa la
-opción *Report a vulnerability* de la pestaña **Security** de este repositorio
-(el aviso privado de GitHub) o escribe privadamente al mantenedor a través de
-GitHub.
+**No publiques el detalle en un issue ni en una discusión pública.** Si en la
+pestaña **Security** de este repositorio aparece *Report a vulnerability*, usa
+ese canal privado. Si no aparece, escribe privadamente al mantenedor a través
+de GitHub y limita el issue público a un aviso genérico sin detalles
+explotables.
 
 Incluye, si puedes:
 
