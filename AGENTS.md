@@ -12,6 +12,7 @@ Punto de entrada al proyecto de aplicación web privada **Puente** (sincronizaci
 - El código manda sobre la memoria.
 - NO guardar secretos en los archivos `.md`.
 - El proyecto debe mantenerse en español (UI, código, documentación).
+- Los mensajes de commit van en español y siguen `instrucciones/NORMAS_DE_CODIGO.md`.
 - Cualquier avance debe registrarse en `memoria.md` y `instrucciones/TAREAS_PENDIENTES.md`.
 
 ## Estado actual
