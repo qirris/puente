@@ -8,8 +8,9 @@ un problema de seguridad.
 
 | Versión | Soporte |
 | --- | --- |
-| 1.0.x | Sí |
-| Anteriores a 1.0 | No |
+| 1.1.x | Sí |
+| 1.0.x | No |
+| Anteriores a 1.1 | No |
 
 ## Cómo informar de una vulnerabilidad
 

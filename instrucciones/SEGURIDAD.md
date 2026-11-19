@@ -84,8 +84,8 @@ CORS abierto. Si en el futuro se reconsidera, hay que documentar el cambio en
 
 ## Datos y secretos
 
-- Los envíos caducan a las 24 h salvo que estén fijados; el cron borra también
-  el objeto de KV.
+- Cada envío caduca según el plazo elegido al enviarlo (1 h, 24 h o 7 días),
+  salvo que esté fijado; el cron borra también el objeto de KV.
 - El código de invitación es el único secreto de la aplicación y vive en
   Cloudflare.
 - No se guardan secretos en `memoria.md`, `instrucciones/` ni en ningún otro

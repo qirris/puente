@@ -4,7 +4,7 @@ Archivo de memoria persistente de OpenCode para el proyecto de aplicación web *
 Regla: no guardar aquí contraseñas, tokens ni ningún secreto.
 
 ## 1. Objetivo y alcance
-Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 MB) entre el móvil y el ordenador, con bandeja única, caducidad a las 24 h y opción de fijar. El backend se migró de Supabase a **Cloudflare** (Workers + D1 + Workers KV) para no depender de servicios que piden tarjeta de crédito. Está desplegada y funcionando.
+Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 MB) entre el móvil y el ordenador, con bandeja única, caducidad elegible (1 h, 24 h o 7 días) y opción de fijar. El backend se migró de Supabase a **Cloudflare** (Workers + D1 + Workers KV) para no depender de servicios que piden tarjeta de crédito. Está desplegada y funcionando.
 
 ## 2. Estado actual
 - Fase: migración completada y desplegada el 19/11/2026.
