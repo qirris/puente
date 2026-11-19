@@ -13,8 +13,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
 - Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
-- Base de datos remota limpia: se eliminaron todos los datos de prueba, incluida la cuenta creada para probar el código de invitación.
-- La primera cuenta real la crea el usuario desde la interfaz web.
+- El usuario ya creó su cuenta real el 19/11/2026 a las 14:57; los datos de prueba creados durante la revisión se eliminaron.
+- Tras la revisión se desplegó la seguridad reforzada (sin cookies): CORS restringido, límite de intentos, cabeceras y observabilidad. Verificado en remoto.
 
 ## 3. Tecnologías y arquitectura
 - Interfaz: React 19, TypeScript, Vite, Vitest.
@@ -30,8 +30,12 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/auth.ts`, `src/lib/sesion.ts`: autenticación y sesión persistente.
   - `src/lib/inbox.ts`: operaciones de la bandeja (sondeo cada 10 s en lugar de Realtime).
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
-  - `migrations/0001_init.sql`, `migrations/0002_sesiones.sql`: esquema D1.
-  - `wrangler.toml`: configuración de Cloudflare.
+  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`: esquema D1.
+  - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 32 pruebas con Vitest.
+  - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
+  - `docs/`: operaciones e historial de Supabase.
+  - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
 
 ## 4. Instrucciones y restricciones
 - Consultar `instrucciones/INSTRUCCIONES_GENERALES.md` e `instrucciones/NORMAS_DE_CODIGO.md`.
@@ -46,7 +50,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Envío de texto y enlaces, con validación de longitud y formato.
 - Subida de fotos y archivos hasta 20 MB con progreso real.
 - Bandeja cronológica con fijado, borrado y descarga.
-- URLs de archivo con el token en la query para que funcionen en `<img>` y `<a>`.
+- URLs de archivo con el token en la query para que funcionen en `<img>` y `<a>` (decisión del usuario: no cambiar a cookies).
+- Límite de 5 intentos fallidos de acceso por correo e IP en 15 minutos, con respuesta 429.
+- Cabeceras de seguridad en API, interfaz y service worker; sin CORS entre orígenes.
 - Limpieza de caducados: cron del Worker y ruta manual `/api/limpieza`.
 - Interfaz responsive (móvil y escritorio).
 - Instalable como aplicación (PWA): manifiesto, iconos PNG y service worker que guarda solo la interfaz, nunca la API.
@@ -68,6 +74,10 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: preparada la publicación segura: licencia MIT, sección "Ámbito del proyecto" en el README, campo "Código de invitación" en el registro y validación en el Worker mediante el secreto `PUENTE_CODIGO_INVITACION`.
 - 19/11/2026: compilación y despliegue correctos; registro sin código rechazado (403) y registro con código aceptado (201); cuenta de prueba eliminada después.
 - 19/11/2026: añadida instalación como aplicación: `public/manifest.webmanifest`, iconos PNG de 180/192/512 px y `public/sw.js` registrado desde `src/main.tsx`. El service worker guarda solo la interfaz y excluye `/api/`. README ampliado con las instrucciones de instalación en Windows y móvil.
+- 19/11/2026: revisión profesional completa. El usuario eligió «Todo» pero rechazó expresamente el cambio a cookies, así que el token sigue en la URL. Añadido el límite de intentos, CORS restringido, cabeceras de seguridad, migración `0003_intentos_acceso.sql` (aplicada en local y remoto), observabilidad y `run_worker_first` para que el Worker vea también los archivos estáticos.
+- 19/11/2026: creadas 32 pruebas automáticas con Vitest y una base SQLite/KV falsa; `npm test` pasa con código 0. `formatBytes` corregido para mostrar «1,5 KB» en lugar de «2 KB».
+- 19/11/2026: documentación ampliada con `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `instrucciones/ARQUITECTURA.md`, `SEGURIDAD.md`, `PRUEBAS.md`, `DECISIONES.md` y `docs/OPERACIONES.md`. `supabase/` movido a `docs/historial/supabase/` con una nota de por qué se conserva.
+- 19/11/2026: `@types/node` movido a `devDependencies`, añadidos metadatos del paquete, `engines`, `.nvmrc`, CI y Dependabot.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -79,6 +89,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - El repositorio de GitHub se hizo público a petición del usuario, con licencia MIT y registro protegido para preservar el uso personal.
 - El código de invitación vive solo como secreto de Cloudflare; no se escribe en archivos ni en commits.
 - La motivación personal y el aviso de asistencia por IA se documentan en el README, redactados en primera persona.
+- El token de sesión sigue en la URL de las imágenes porque el usuario rechazó el cambio a cookies; se mitiga con `Referrer-Policy: no-referrer` y `Cache-Control: no-store`.
+- CORS restringido al mismo origen: la interfaz se sirve desde el propio Worker, así que no se necesita `Access-Control-Allow-Origin: *`.
+- `run_worker_first = true` en los recursos estáticos para que el Worker pueda añadir cabeceras de seguridad a la interfaz.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -88,13 +101,19 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: tras la limpieza de código, `npm run build` correcto (48 módulos), redespliegue correcto y comprobación en la URL pública: página principal (200) y `/api/sesion` sin token (401, respuesta esperada).
 - 19/11/2026: con el código de invitación activo, `npm run build` y despliegue correctos; `/api/registro` sin código devuelve 403 con "El código de invitación no es correcto." y con código devuelve 201. Cuenta de prueba eliminada de la D1 remota.
 - 19/11/2026: con la PWA añadida, `npm run build` correcto; el manifiesto, los iconos y el service worker se sirven desde la URL pública con estado 200 y tipos correctos.
+- 19/11/2026: `npm ci`, `npm run build` y `npm test` correctos (32 pruebas). Despliegue correcto con observabilidad y `run_worker_first`.
+- 19/11/2026: en remoto, la interfaz y `/sw.js` sirven CSP, `Referrer-Policy`, `nosniff` y `X-Frame-Options`; `/api/sesion` sin token devuelve 401 sin cabeceras CORS; `OPTIONS` devuelve 204 sin `Access-Control-Allow-Origin`.
+- 19/11/2026: en remoto, 5 accesos fallidos devuelven 401 y el sexto 429 con el mensaje previsto; la tabla de intentos se limpió justo después.
+- 19/11/2026: en remoto, registro sin código devuelve 403, con código 201, acceso correcto 200, sesión con token en URL 200 y limpieza manual 200; la cuenta temporal se borró de D1.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
 - Los `wrangler dev` de prueba se duplicaron y colgaron por pelear por el puerto 8787 y por borrar `.wrangler/state` con un servidor activo. Se limpiaron todos; solo se usa uno a la vez.
 - PBKDF2 con 150 000 iteraciones falla en el runtime de Cloudflare (no en local); corregido a 100 000 y verificado en remoto.
-- No hay archivos de prueba automatizados: `npm test` (Vitest) termina con código 1 porque no encuentra `*.test.*`/`*.spec.*`. La verificación real se hace con `npm run build` y las pruebas manuales de la API documentadas arriba.
-- Sin problemas pendientes conocidos. KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en aparecer en otra ubicación.
+- Resuelto: `npm test` antes fallaba por falta de archivos de prueba; ahora hay 32 pruebas y termina con código 0.
+- Las respuestas HEAD de `/` pueden mostrar cabeceras antiguas durante unos minutos por caché de Cloudflare; las peticiones GET reales sí incluyen las cabeceras nuevas.
+- Al inspeccionar la D1 remota se encontró la cuenta real del usuario (creada a las 14:57). No se borró. La consulta mostró su token de sesión en la salida, así que se invalidó esa sesión por precaución; el usuario debe volver a iniciar sesión.
+- KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en aparecer en otra ubicación.
 
 ## 10. Próximos pasos
 - [x] Desplegar `puente-api` y anotar la URL pública.
@@ -103,9 +122,14 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Crear el repositorio `qirris/puente`, fijar las normas en español y subir el código.
 - [x] Publicar el repositorio con licencia MIT, aviso de proyecto personal y registro protegido con código de invitación.
 - [x] Permitir instalar Puente como aplicación en escritorio y móvil.
-- [ ] El usuario crea su cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y prueba la app desde móvil y ordenador.
+- [x] Arreglar `npm test`, el README y la documentación rota.
+- [x] Cerrar la seguridad sin cambiar el token de URL por cookies.
+- [x] Añadir CI, dependencias y documentación de operaciones.
+- [x] Añadir tag y release v1.0.0 y ajustar la configuración de GitHub.
+- [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
 - 16/11/2026: inicialización del proyecto y sistema de memoria (fase Supabase).
 - 18/11/2026: traslado a `Documents\NEGOCIOS` y cambio de rumbo a Cloudflare.
 - 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub, publicación segura con licencia MIT, ámbito personal y registro protegido, e instalación como aplicación.
+- 19/11/2026: revisión profesional integral: pruebas automáticas, seguridad reforzada sin cookies, documentación completa, integración continua, observabilidad y cierre de GitHub con versión 1.0.0.
