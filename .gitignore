@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.wrangler/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+
+.vercel/
+.netlify/
+supabase/.temp/
+supabase/.branches/

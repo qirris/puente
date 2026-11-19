@@ -1,0 +1,23 @@
+name = "puente-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-19"
+
+# Base de datos de la bandeja: enlaces, notas y metadatos de archivos.
+[[d1_databases]]
+binding = "PUENTE_DB"
+database_name = "puente-datos"
+database_id = "8592609d-e6a4-475b-bc8a-c5a0073db1dd"
+
+# Almacenamiento privado de los archivos enviados.
+[[kv_namespaces]]
+binding = "PUENTE_ARCHIVOS"
+id = "f00415679cbd4c8e9fbf3dcba07d2240"
+
+# La interfaz web (build de Vite) se sirve desde el mismo Worker.
+[assets]
+directory = "./dist"
+binding = "PUENTE_STATIC"
+
+# Limpieza de envíos caducados, una vez por hora.
+[triggers]
+crons = ["17 * * * *"]
