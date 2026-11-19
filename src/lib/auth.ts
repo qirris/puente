@@ -26,10 +26,11 @@ export async function iniciarSesion(
 export async function registrar(
   email: string,
   password: string,
+  codigo: string = '',
 ): Promise<Sesion> {
   const datos = await api<RespuestaAcceso>('/api/registro', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, codigo }),
   })
   const sesion = aSesion(datos)
   guardarSesion(sesion)

@@ -35,6 +35,7 @@ export function AuthScreen() {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [codigo, setCodigo] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,10 +70,11 @@ export function AuthScreen() {
       if (mode === 'login') {
         await iniciarSesion(cleanEmail, password)
       } else {
-        await registrar(cleanEmail, password)
+        await registrar(cleanEmail, password, codigo.trim())
         setNotice('Cuenta creada. Ya estás dentro.')
       }
       setEmail('')
+      setCodigo('')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo completar la operación.'
       setError(translateAuthError(message))
@@ -214,6 +216,23 @@ export function AuthScreen() {
                 </button>
               </div>
             </label>
+
+            {mode === 'signup' ? (
+              <label className="field">
+                <span>Código de invitación</span>
+                <div className="input-shell">
+                  <IconLock size={18} className="input-icon" />
+                  <input
+                    type="text"
+                    name="codigo"
+                    autoComplete="off"
+                    placeholder="El código que te han dado"
+                    value={codigo}
+                    onChange={(event) => setCodigo(event.target.value)}
+                  />
+                </div>
+              </label>
+            ) : null}
 
             {error ? (
               <p className="form-message error" role="alert">

@@ -40,6 +40,8 @@ interface Env {
   PUENTE_DB: D1Database
   PUENTE_ARCHIVOS: KVArchivos
   PUENTE_STATIC: Fetcher
+  // Si no se configura, el registro queda abierto (útil en desarrollo local).
+  PUENTE_CODIGO_INVITACION?: string
 }
 
 interface Cuenta {
@@ -285,6 +287,11 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     }
     if (password.length < 6) {
       return fallo('La contraseña debe tener al menos 6 caracteres.', 400)
+    }
+
+    const codigo = String(datos.codigo ?? '').trim()
+    if (env.PUENTE_CODIGO_INVITACION && codigo !== env.PUENTE_CODIGO_INVITACION) {
+      return fallo('El código de invitación no es correcto.', 403)
     }
 
     const previa = await env.PUENTE_DB.prepare('select id from users where email = ?')
