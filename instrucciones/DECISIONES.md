@@ -73,6 +73,15 @@ Solo identifica la fila dentro de `/api/sesiones`, así que no abre la cuenta po
 sí mismo. La migración `0004_sesiones_public_id.sql` rellenó las sesiones ya
 abiertas y el Worker genera el valor en cada acceso nuevo.
 
+## 19/11/2026 · Caducidad elegible por envío
+
+La caducidad fija de 24 horas no servía para todo: a veces basta una hora y a
+veces conviene conservar algo una semana. Se ofrecen 1 hora, 24 horas y 7 días,
+con 24 horas por defecto para no cambiar el comportamiento conocido. El Worker
+valida los tres valores y guarda el plazo en `items.duracion_horas` para que al
+desfijar un envío recupere su tiempo original. La subida usa una cabecera porque
+el cuerpo del archivo se envía en crudo para conservar el progreso XHR.
+
 ## 19/11/2026 · Búsqueda y filtros solo en el cliente
 
 La bandeja cabe en memoria y no justificaba índices nuevos en D1. Buscar y filtrar

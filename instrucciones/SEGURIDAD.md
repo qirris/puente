@@ -38,6 +38,15 @@ navegador. Este documento describe qué se aplica y qué limitaciones se asumen.
 - Acertar cambia la contraseña, borra el código y cierra todas las sesiones.
 - Generar un código nuevo invalida el anterior.
 
+## Caducidad de los envíos
+
+- Solo se admiten 1, 24 y 168 horas. Cualquier otro valor se rechaza con HTTP
+  400 antes de escribir en D1 o en KV.
+- El plazo viaja en `duracion` para texto y enlaces, y en `x-puente-duracion`
+  para archivos. En ambos casos el Worker lo valida; el cliente no es la
+  frontera de seguridad.
+- Las fechas de caducidad se calculan en el Worker, nunca se aceptan del cliente.
+
 ## Límite de intentos
 
 - 5 fallos permitidos por combinación de correo y dirección IP.

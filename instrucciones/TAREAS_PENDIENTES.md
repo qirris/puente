@@ -46,7 +46,8 @@
 - [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [x] Listar y cerrar sesiones activas.
 - [x] Código de recuperación mostrado una sola vez, regenerable desde una sesión activa.
-- [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
+- [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
+- [ ] Publicar la versión v1.1.0 con las cinco mejoras.
 
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.

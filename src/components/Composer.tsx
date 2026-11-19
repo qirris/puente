@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { sendFile, sendText } from '../lib/inbox'
 import { formatBytes } from '../lib/format'
-import { MAX_TEXT_LENGTH, type InboxItem, type ToastTone } from '../lib/types'
+import {
+  DURACIONES,
+  DURACION_POR_DEFECTO,
+  MAX_TEXT_LENGTH,
+  type HorasDuracion,
+  type InboxItem,
+  type ToastTone,
+} from '../lib/types'
 import { composeText, validateFile } from '../lib/validation'
 import {
   IconArrowUp,
@@ -23,6 +30,7 @@ export function Composer({ onSent, notify }: ComposerProps) {
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState<'uploading' | 'saving'>('uploading')
   const [dragging, setDragging] = useState(false)
+  const [duracion, setDuracion] = useState<HorasDuracion>(DURACION_POR_DEFECTO)
   const inputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -72,6 +80,9 @@ export function Composer({ onSent, notify }: ComposerProps) {
     pickFile(dropped)
   }
 
+  const etiquetaDuracion =
+    DURACIONES.find((opcion) => opcion.horas === duracion)?.etiqueta ?? '24 horas'
+
   async function submitText() {
     const composed = composeText(text)
     if (!composed) {
@@ -85,10 +96,10 @@ export function Composer({ onSent, notify }: ComposerProps) {
 
     setSending(true)
     try {
-      const item = await sendText(composed)
+      const item = await sendText({ ...composed, duracion })
       setText('')
       onSent(item)
-      notify('Guardado en tu bandeja.', 'success')
+      notify(`Guardado en tu bandeja. Caduca en ${etiquetaDuracion}.`, 'success')
       textareaRef.current?.focus()
     } catch (err) {
       notify(err instanceof Error ? err.message : 'No se pudo guardar el envío.', 'error')
@@ -108,13 +119,17 @@ export function Composer({ onSent, notify }: ComposerProps) {
     setProgress(0)
     setPhase('uploading')
     try {
-      const item = await sendFile(currentFile, (percent) => {
-        setProgress(percent)
-        if (percent >= 100) setPhase('saving')
-      })
+      const item = await sendFile(
+        currentFile,
+        (percent) => {
+          setProgress(percent)
+          if (percent >= 100) setPhase('saving')
+        },
+        duracion,
+      )
       resetFile()
       onSent(item)
-      notify('Archivo guardado en tu bandeja.', 'success')
+      notify(`Archivo guardado. Caduca en ${etiquetaDuracion}.`, 'success')
     } catch (err) {
       notify(err instanceof Error ? err.message : 'No se pudo subir el archivo.', 'error')
     } finally {
@@ -245,6 +260,27 @@ export function Composer({ onSent, notify }: ComposerProps) {
             </div>
           </>
         )}
+
+        <fieldset className="duracion-campo" disabled={sending}>
+          <legend>Caducidad</legend>
+          <div className="duracion-opciones">
+            {DURACIONES.map((opcion) => (
+              <label
+                key={opcion.horas}
+                className={`duracion-opcion${duracion === opcion.horas ? ' activa' : ''}`}
+              >
+                <input
+                  type="radio"
+                  name="duracion"
+                  value={opcion.horas}
+                  checked={duracion === opcion.horas}
+                  onChange={() => setDuracion(opcion.horas)}
+                />
+                <span>{opcion.etiqueta}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <div className="composer-actions">
           {!file ? (

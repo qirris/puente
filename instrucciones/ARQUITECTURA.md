@@ -49,9 +49,9 @@ Cloudflare Worker  puente-api
 | `/api/sesiones/:id` | DELETE | Cierra una sesión propia por su id público. |
 | `/api/recuperacion/codigo` | POST | Genera un código de recuperación; exige sesión. |
 | `/api/recuperacion/restablecer` | POST | Cambia la contraseña con un código vigente; no exige sesión. |
-| `/api/envios` | GET / POST | Lista o crea envíos de texto y enlace. |
+| `/api/envios` | GET / POST | Lista o crea envíos de texto y enlace; `duracion` admite 1, 24 o 168 horas. |
 | `/api/envios/:id` | PATCH / DELETE | Fija, desfija o borra un envío. |
-| `/api/archivos` | POST | Sube un archivo a KV y crea su registro en D1. |
+| `/api/subir` | POST | Sube un archivo a KV y crea su registro en D1; cabecera `x-puente-duracion`. |
 | `/api/archivos/:id` | GET | Sirve el archivo o su vista previa. |
 | `/api/limpieza` | POST | Ejecuta la limpieza manualmente. |
 
@@ -60,6 +60,15 @@ Cloudflare Worker  puente-api
 `hooks/useInbox.ts` mantiene la lista de envíos y `lib/filtrado.ts` aplica la
 búsqueda y los filtros solo en el navegador. No hay rutas ni consultas nuevas:
 la lista llega de `/api/envios` y se filtra en memoria.
+
+## Caducidad de los envíos
+
+`DURACIONES` en `lib/types.ts` ofrece 1 hora, 24 horas (por defecto) y 7 días.
+El plazo se envía en `duracion` para texto y enlaces y en `x-puente-duracion`
+para archivos, porque el cuerpo de la subida es el archivo en crudo. El Worker
+valida los tres valores y calcula la fecha: no acepta fechas del cliente. La
+migración `0006_duracion_envios.sql` guarda el plazo en `items.duracion_horas`
+para que al desfijar se recupere el tiempo elegido al crear el envío.
 
 ## Sesiones activas
 
@@ -91,16 +100,18 @@ Las migraciones están en `migrations/` y se aplican con Wrangler:
 - `0003_intentos_acceso.sql`: fallos de acceso por clave `IP|correo`.
 - `0004_sesiones_public_id.sql`: identificador público de cada sesión.
 - `0005_codigos_recuperacion.sql`: hash del código, intentos y caducidad.
+- `0006_duracion_envios.sql`: plazo elegido al crear cada envío.
 
 `items` guarda metadatos y, para imágenes y archivos, la ruta del objeto en KV.
 Los bytes viven siempre en `puente-archivos`; D1 nunca guarda archivos.
 
 ## Flujo de una subida
 
-1. El cliente valida tamaño y tipo y envía el archivo a `/api/archivos`.
-2. El Worker comprueba la sesión, limita el tamaño a 20 MB y genera un nombre
-   seguro con `nombreSeguro`.
-3. Escribe los bytes en KV y crea la fila en `items` con caducidad de 24 horas.
+1. El cliente valida tamaño y tipo y envía el archivo a `/api/subir`, con la
+   duración elegida en `x-puente-duracion`.
+2. El Worker comprueba la sesión, la duración, limita el tamaño a 20 MB y genera
+   un nombre seguro con `nombreSeguro`.
+3. Escribe los bytes en KV y crea la fila en `items` con la caducidad calculada.
 4. Para las imágenes, la bandeja devuelve una `previewUrl` con el token de
    sesión en la query; el service worker excluye `/api/` de su caché.
 

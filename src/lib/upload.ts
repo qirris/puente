@@ -5,6 +5,7 @@ import type { Item } from './types'
 interface SubidaArgs {
   file: File
   onProgress: (percent: number) => void
+  duracion: number
 }
 
 function readError(xhr: XMLHttpRequest): string {
@@ -29,12 +30,14 @@ function readError(xhr: XMLHttpRequest): string {
 export function uploadWithProgress({
   file,
   onProgress,
+  duracion,
 }: SubidaArgs): Promise<Item> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${config.apiUrl}/api/subir`)
     xhr.setRequestHeader('Authorization', `Bearer ${tokenActual() ?? ''}`)
     xhr.setRequestHeader('x-puente-nombre', encodeURIComponent(file.name))
+    xhr.setRequestHeader('x-puente-duracion', String(duracion))
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
 
     xhr.upload.onprogress = (event) => {

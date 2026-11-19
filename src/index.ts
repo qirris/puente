@@ -66,6 +66,7 @@ interface Envio {
   file_name: string | null
   mime_type: string | null
   size_bytes: number | null
+  duracion_horas: number | null
   pinned: number
   created_at: string
   expires_at: string | null
@@ -90,7 +91,9 @@ const LIMITE_ARCHIVO = 20 * 1024 * 1024
 const MAX_TEXTO = 10_000
 // Cloudflare Workers limita PBKDF2 a 100000 iteraciones como máximo.
 const ITERACIONES = 100_000
-const HORAS = 24 * 60 * 60 * 1000
+const MILISEGUNDOS_POR_HORA = 60 * 60 * 1000
+// Plazos admitidos al enviar: 1 hora, 24 horas y 7 días.
+const DURACIONES_HORAS = [1, 24, 168] as const
 const INTENTOS_MAXIMOS = 5
 const VENTANA_INTENTOS = 15 * 60 * 1000
 // El código de recuperación vive una hora y admite cinco intentos.
@@ -330,6 +333,13 @@ async function usuarioDe(request: Request, env: Env): Promise<UsuarioSesion | nu
   }
 }
 
+/** Omisión de 24 horas; un valor presente pero no admitido es un error. */
+function duracionEnHoras(valor: unknown): number | null {
+  if (valor === undefined || valor === null || valor === '') return 24
+  const horas = typeof valor === 'number' ? valor : Number(String(valor))
+  return DURACIONES_HORAS.find((permitida) => permitida === horas) ?? null
+}
+
 function itemDe(envio: Envio): Record<string, unknown> {
   const base = {
     id: envio.id,
@@ -340,6 +350,7 @@ function itemDe(envio: Envio): Record<string, unknown> {
     file_name: envio.file_name,
     mime_type: envio.mime_type,
     size_bytes: envio.size_bytes,
+    duracionHoras: envio.duracion_horas ?? 24,
     pinned: Boolean(envio.pinned),
     created_at: envio.created_at,
     expires_at: envio.expires_at,
@@ -657,13 +668,18 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     if (kind === 'link' && !/^https?:\/\/\S+$/i.test(content)) {
       return fallo('Escribe un enlace http(s) válido.', 400)
     }
+    const duracion = duracionEnHoras(datos.duracion)
+    if (duracion === null) {
+      return fallo('La caducidad debe ser 1, 24 o 168 horas.', 400)
+    }
 
     const id = crypto.randomUUID()
+    const expira = new Date(Date.now() + duracion * MILISEGUNDOS_POR_HORA).toISOString()
     await env.PUENTE_DB.prepare(
-      `insert into items (id, user_id, kind, content)
-       values (?, ?, ?, ?)`,
+      `insert into items (id, user_id, kind, content, duracion_horas, expires_at)
+       values (?, ?, ?, ?, ?, ?)`,
     )
-      .bind(id, usuario.id, kind, content)
+      .bind(id, usuario.id, kind, content, duracion, expira)
       .run()
 
     const fila = await env.PUENTE_DB.prepare('select * from items where id = ?')
@@ -687,10 +703,11 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
       const pinned = datos.pinned === true ? 1 : 0
       let expiresAt = fila.expires_at
       if (pinned !== fila.pinned) {
-        // Al desfijar se conceden otras 24 horas; al fijar se conserva el plazo.
+        // Al desfijar se devuelve el plazo elegido al crear el envío.
+        const horas = fila.duracion_horas ?? 24
         expiresAt = pinned
           ? fila.expires_at
-          : new Date(Date.now() + HORAS).toISOString()
+          : new Date(Date.now() + horas * MILISEGUNDOS_POR_HORA).toISOString()
       }
       await env.PUENTE_DB.prepare(
         'update items set pinned = ?, expires_at = ? where id = ? and user_id = ?',
@@ -739,16 +756,23 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     }
     const tipo = request.headers.get('Content-Type') || 'application/octet-stream'
     const kind = tipo.startsWith('image/') ? 'image' : 'file'
+    const duracion = duracionEnHoras(
+      request.headers.get('x-puente-duracion') ?? undefined,
+    )
+    if (duracion === null) {
+      return fallo('La caducidad debe ser 1, 24 o 168 horas.', 400)
+    }
     const clave = `${usuario.id}/${crypto.randomUUID()}-${nombreSeguro(nombreOriginal)}`
     const id = crypto.randomUUID()
-    const expira = new Date(Date.now() + HORAS).toISOString()
+    const expira = new Date(Date.now() + duracion * MILISEGUNDOS_POR_HORA).toISOString()
 
     try {
       await env.PUENTE_ARCHIVOS.put(clave, bytes)
       await env.PUENTE_DB.prepare(
         `insert into items
-           (id, user_id, kind, storage_path, file_name, mime_type, size_bytes, expires_at)
-         values (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, user_id, kind, storage_path, file_name, mime_type, size_bytes,
+            duracion_horas, expires_at)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
           id,
@@ -758,6 +782,7 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
           nombreOriginal,
           tipo,
           bytes.byteLength,
+          duracion,
           expira,
         )
         .run()

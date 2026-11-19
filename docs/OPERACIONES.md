@@ -63,8 +63,9 @@ npx wrangler kv key get "<clave>" --binding PUENTE_ARCHIVOS --remote
 
 `get` devuelve bytes en la salida estándar; para archivos binarios conviene
 usar la API de Cloudflare o el panel en lugar de redirigir la salida en
-PowerShell. En la práctica, los archivos caducan a las 24 horas y sus metadatos
-están en D1, así que la copia crítica es la de D1.
+PowerShell. En la práctica, los archivos caducan según el plazo elegido al
+enviarlos (1 hora, 24 horas o 7 días) y sus metadatos están en D1, así que la
+copia crítica es la de D1.
 
 ## Restauración
 

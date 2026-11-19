@@ -151,7 +151,10 @@ export function AuthScreen({ onCodigoGenerado }: AuthScreenProps) {
             <span className="point-number">02</span>
             <div>
               <strong>Caduca de verdad</strong>
-              <p>A las 24 horas se borra el registro y el archivo. Fija lo importante para conservarlo.</p>
+              <p>
+                Cada envío caduca cuando tú lo decides: 1 hora, 24 horas o 7 días. Fija lo
+                importante para conservarlo.
+              </p>
             </div>
           </li>
           <li>

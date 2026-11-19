@@ -35,9 +35,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/components/SesionesPanel.tsx`: panel para revisar y cerrar sesiones y generar un código.
   - `src/components/CodigoUnico.tsx`: muestra el código de recuperación una sola vez.
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
-  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`: esquema D1.
+  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`, `0006_duracion_envios.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 52 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 56 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -70,6 +70,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   vez al registrarse o generado desde una sesión activa; válido 1 hora, con 5
   intentos y guardado solo como hash PBKDF2. Un acierto cambia la contraseña y
   cierra todas las sesiones.
+- Selector de caducidad al enviar: 1 hora, 24 horas (por defecto) o 7 días, tanto
+  para texto y enlaces como para archivos. El plazo se guarda y se recupera al
+  desfijar un envío.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -97,6 +100,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: sesiones activas: migración `0004_sesiones_public_id.sql` aplicada en local y remoto, rutas `GET /api/sesiones` y `DELETE /api/sesiones/:id`, 5 pruebas nuevas, panel `SesionesPanel` y botón en la cabecera; desplegado y verificado en remoto.
 - 19/11/2026: recuperación de contraseña: migración `0005_codigos_recuperacion.sql` aplicada en local y remoto, rutas `POST /api/recuperacion/codigo` y `POST /api/recuperacion/restablecer`, componente `CodigoUnico`, modo `recover` en `AuthScreen`, botón de generación en `SesionesPanel` y 7 pruebas nuevas; desplegado y verificado en remoto.
 - 19/11/2026: corregido el flujo del registro: `guardarSesion()` desmontaba `AuthScreen` antes de mostrar el código, así que `App` muestra ahora una pantalla de confirmación con el código hasta que el usuario confirma que lo ha guardado. Nuevos estilos `.codigo-pantalla`.
+- 19/11/2026: caducidad configurable: migración `0006_duracion_envios.sql` aplicada en local y remoto, valores 1/24/168 validados en el Worker, selector en `Composer`, cabecera `x-puente-duracion` en la subida y 4 pruebas nuevas; desplegado y verificado en remoto.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -115,6 +119,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - La búsqueda y los filtros de la bandeja se resuelven en el cliente: la lista ya está en memoria y no merece índices nuevos ni rutas adicionales.
 - Cada sesión tiene un `public_id` aleatorio de 16 bytes: permite listarla y cerrarla sin enviar el token al navegador. No es un secreto, pero tampoco autentica.
 - Recuperación sin correo ni servicios de terceros: el código se muestra una sola vez y solo se guarda su hash PBKDF2. Conviene guardarlo en un gestor de contraseñas; quien lo pierde y no tiene sesión activa no puede recuperar el acceso automáticamente.
+- La caducidad se elige por envío entre 1 hora, 24 horas y 7 días. 24 horas sigue siendo el valor por defecto; el Worker valida el plazo y calcula la fecha, y guarda el plazo para recuperarlo al desfijar.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -129,6 +134,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: en remoto, 5 accesos fallidos devuelven 401 y el sexto 429 con el mensaje previsto; la tabla de intentos se limpió justo después.
 - 19/11/2026: en remoto, registro sin código devuelve 403, con código 201, acceso correcto 200, sesión con token en URL 200 y limpieza manual 200; la cuenta temporal se borró de D1.
 - 19/11/2026: CI de GitHub en verde en `master`. Configurados homepage, Dependabot, secret scanning con push protection, protección de `master`, tag `v1.0.0` y release `v1.0.0`.
+- 19/11/2026: CI en verde para el commit `6fe5767` (check «Tipos, build y pruebas»).
+- 19/11/2026: con la caducidad configurable, `npm run build` (53 módulos) y `npm test` (56 pruebas, 4 archivos) correctos; migración 0006 aplicada en local y remoto; desplegada la versión `38a86cd1-87f4-40d2-a3ea-a892759137cc`. En remoto: `POST /api/envios` sin sesión devuelve 401; el JS publicado contiene «Caducidad», «1 hora», «24 horas», «7 días», «Caduca en» y `x-puente-duracion`; el CSS sirve `.duracion-campo`, `.duracion-opciones` y `.duracion-opcion`.
 - 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
 - 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
 - 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
@@ -145,6 +152,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - El aviso privado de vulnerabilidades de GitHub no se pudo activar con el token disponible; `SECURITY.md` contempla el contacto privado alternativo.
 - KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en aparecer en otra ubicación.
 - Resuelto: en el registro, `guardarSesion()` desmontaba `AuthScreen` y el código de recuperación nunca se veía. Ahora `App` retiene el código y muestra una pantalla de confirmación antes de entrar en la bandeja.
+- Resuelto: al añadir la caducidad se reutilizó la constante `HORAS`, que ya valía 24 horas, y «1 hora» caducaba a las 24 horas. Las 56 pruebas lo detectaron; la constante se renombró a `MILISEGUNDOS_POR_HORA`.
 
 ## 10. Próximos pasos
 - [x] Desplegar `puente-api` y anotar la URL pública.
@@ -161,7 +169,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [x] Listar y cerrar sesiones activas.
 - [x] Código de recuperación de contraseña mostrado una sola vez.
-- [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
+- [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [ ] Publicar v1.1.0 con las mejoras anteriores.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
@@ -174,3 +182,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: segunda mejora: búsqueda y filtros por tipo en la bandeja, resueltos en el cliente y con 8 pruebas nuevas.
 - 19/11/2026: tercera mejora: panel de sesiones activas con identificador público, rutas propias y limpieza de sesiones caducadas.
 - 19/11/2026: cuarta mejora: recuperación de contraseña con código de un solo uso, hash PBKDF2, cinco intentos y cierre de todas las sesiones al acertar.
+- 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar.

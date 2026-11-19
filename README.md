@@ -38,6 +38,10 @@ nunca se versiona.
 
 La bandeja admite búsqueda por texto, nombre de archivo o tipo MIME y filtros
 por tipo de envío. El filtrado se hace en el navegador, sin peticiones extra.
+Al enviar puedes elegir la caducidad: 1 hora, 24 horas (por defecto) o 7 días.
+El plazo se guarda con el envío, así que al desfijar un envío recupera el tiempo
+que elegiste al crearlo.
+
 También puedes revisar y cerrar tus sesiones activas desde el icono de
 dispositivos de la cabecera; cada una se identifica con un código público, nunca
 con el token de acceso.
@@ -71,7 +75,7 @@ Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
-npm test            # 52 pruebas automáticas
+npm test            # 56 pruebas automáticas
 npm run build       # comprueba tipos y genera dist/
 ```
 

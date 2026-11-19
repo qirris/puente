@@ -3,7 +3,7 @@
 Este archivo sigue las convenciones de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y [Semantic Versioning](https://semver.org/lang/es/).
 
-## [No publicado]
+## [1.1.0] - 2026-11-19
 
 ### Añadido
 
@@ -14,11 +14,16 @@ y [Semantic Versioning](https://semver.org/lang/es/).
 - Código de recuperación de contraseña de un solo uso: se muestra al crear la
   cuenta o se genera desde una sesión activa, caduca en 1 hora y admite cinco
   intentos. Un restablecimiento correcto cierra todas las sesiones.
+- Selector de caducidad al enviar: 1 hora, 24 horas o 7 días. El plazo elegido
+  se guarda y se recupera si el envío se fija y luego se desfija.
+- Las pruebas automáticas pasan de 32 a 56.
 
 ### Cambiado
 
 - Fraunces y Manrope se sirven desde `public/fuentes/`; la interfaz ya no pide
   fuentes a Google y la CSP solo permite fuentes del mismo origen.
+- Los envíos ya no caducan siempre a las 24 horas: ese plazo sigue siendo el
+  valor por defecto, pero se puede elegir al crear cada envío.
 
 ## [1.0.0] - 2026-11-19
 

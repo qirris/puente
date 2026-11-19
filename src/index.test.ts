@@ -557,3 +557,124 @@ describe('recuperación de contraseña', () => {
     expect(restante.n).toBe(0)
   })
 })
+
+describe('caducidad configurable', () => {
+  const EMAIL = 'ana@ejemplo.com'
+
+  async function registrar() {
+    const entorno = crearLlamadas()
+    const respuesta = await entorno.json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    const { token } = await respuesta.json()
+    return { ...entorno, token }
+  }
+
+  function texto(token: string, duracion?: number) {
+    const cuerpo: Record<string, unknown> = { kind: 'text', content: 'Mensaje de prueba' }
+    if (duracion !== undefined) cuerpo.duracion = duracion
+    return {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(cuerpo),
+    }
+  }
+
+  it('aplica la duración elegida a los envíos de texto', async () => {
+    const { llamar, token } = await registrar()
+    const antes = Date.now()
+
+    const corto = await llamar('/api/envios', texto(token, 1))
+    expect(corto.status).toBe(201)
+    const uno = await corto.json()
+    expect(uno.duracionHoras).toBe(1)
+    const milisCorto = new Date(uno.expires_at).getTime() - antes
+    expect(milisCorto).toBeGreaterThan(59 * 60_000)
+    expect(milisCorto).toBeLessThanOrEqual(61 * 60_000)
+
+    const largo = await llamar('/api/envios', texto(token, 168))
+    const siete = await largo.json()
+    expect(siete.duracionHoras).toBe(168)
+    const milisLargo = new Date(siete.expires_at).getTime() - antes
+    expect(milisLargo).toBeGreaterThan(167 * 60 * 60_000)
+    expect(milisLargo).toBeLessThanOrEqual(169 * 60 * 60_000)
+
+    const normal = await llamar('/api/envios', texto(token))
+    const veinticuatro = await normal.json()
+    expect(veinticuatro.duracionHoras).toBe(24)
+  })
+
+  it('rechaza una duración no permitida', async () => {
+    const { llamar, token } = await registrar()
+    const respuesta = await llamar('/api/envios', texto(token, 2))
+    expect(respuesta.status).toBe(400)
+    expect((await respuesta.json()).error).toContain('1, 24 o 168')
+  })
+
+  it('aplica la duración del encabezado a los archivos', async () => {
+    const { base, llamar, token } = await registrar()
+    const antes = Date.now()
+    const respuesta = await llamar('/api/subir', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'x-puente-nombre': encodeURIComponent('prueba.txt'),
+        'x-puente-duracion': '168',
+        'Content-Type': 'text/plain',
+      },
+      body: 'contenido de prueba',
+    })
+    expect(respuesta.status).toBe(201)
+    const item = await respuesta.json()
+    expect(item.duracionHoras).toBe(168)
+    expect(new Date(item.expires_at).getTime() - antes).toBeGreaterThan(167 * 60 * 60_000)
+
+    const fila = base.prepare('select duracion_horas from items where id = ?')
+      .get(item.id) as { duracion_horas: number }
+    expect(fila.duracion_horas).toBe(168)
+
+    const invalida = await llamar('/api/subir', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'x-puente-duracion': '7',
+        'Content-Type': 'text/plain',
+      },
+      body: 'otro contenido',
+    })
+    expect(invalida.status).toBe(400)
+  })
+
+  it('recupera la duración original al desfijar un envío', async () => {
+    const { base, llamar, token } = await registrar()
+    const creado = await llamar('/api/envios', texto(token, 1))
+    const { id } = await creado.json()
+    const cabeceras = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    }
+
+    await llamar(`/api/envios/${id}`, {
+      method: 'PATCH',
+      headers: cabeceras,
+      body: JSON.stringify({ pinned: true }),
+    })
+    base.prepare('update items set expires_at = ? where id = ?')
+      .run('2020-01-01T00:00:00.000Z', id)
+
+    const antes = Date.now()
+    const desfijado = await llamar(`/api/envios/${id}`, {
+      method: 'PATCH',
+      headers: cabeceras,
+      body: JSON.stringify({ pinned: false }),
+    })
+    expect(desfijado.status).toBe(200)
+    const item = await desfijado.json()
+    expect(item.duracionHoras).toBe(1)
+    expect(new Date(item.expires_at).getTime() - antes).toBeLessThanOrEqual(61 * 60_000)
+  })
+})

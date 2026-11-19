@@ -3,7 +3,7 @@
 import { api } from './api'
 import { config } from './config'
 import { tokenActual } from './sesion'
-import type { InboxItem, Item, ItemKind } from './types'
+import type { HorasDuracion, InboxItem, Item, ItemKind } from './types'
 import { uploadWithProgress } from './upload'
 
 function friendlyError(message: string): string {
@@ -46,6 +46,7 @@ export async function listItems(): Promise<InboxItem[]> {
 export interface NewText {
   kind: Extract<ItemKind, 'text' | 'link'>
   content: string
+  duracion: HorasDuracion
 }
 
 export async function sendText(payload: NewText): Promise<Item> {
@@ -62,9 +63,10 @@ export async function sendText(payload: NewText): Promise<Item> {
 export async function sendFile(
   file: File,
   onProgress: (percent: number) => void,
+  duracion: HorasDuracion,
 ): Promise<Item> {
   try {
-    return await uploadWithProgress({ file, onProgress })
+    return await uploadWithProgress({ file, onProgress, duracion })
   } catch (error) {
     throw new Error(friendlyError(error instanceof Error ? error.message : 'Error'))
   }

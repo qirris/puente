@@ -6,7 +6,13 @@ import {
   subscribeToInbox,
 } from './lib/inbox'
 import { filtrarEnvios, type FiltroTipo } from './lib/filtrado'
-import type { InboxItem, Sesion, ToastMessage, ToastTone } from './lib/types'
+import {
+  DURACIONES,
+  type InboxItem,
+  type Sesion,
+  type ToastMessage,
+  type ToastTone,
+} from './lib/types'
 import { useAuth } from './hooks/useAuth'
 import { useInbox } from './hooks/useInbox'
 import { AuthScreen } from './components/AuthScreen'
@@ -160,8 +166,13 @@ function Pantry({ session, signOut }: PantryProps) {
         pinned: updated.pinned,
         expires_at: updated.expires_at,
       })
+      const horas = item.duracionHoras ?? 24
+      const etiqueta =
+        DURACIONES.find((opcion) => opcion.horas === horas)?.etiqueta ?? '24 horas'
       notify(
-        nextPinned ? 'Fijado. Este envío ya no caduca.' : 'Desfijado. Caducará en 24 horas.',
+        nextPinned
+          ? 'Fijado. Este envío ya no caduca.'
+          : `Desfijado. Caducará en ${etiqueta}.`,
       )
     },
     [notify, updateItem],
@@ -228,7 +239,7 @@ function Pantry({ session, signOut }: PantryProps) {
               <p className="eyebrow">Tu bandeja</p>
               <h1 id="inbox-heading">Bandeja</h1>
               <p className="inbox-subtitle">
-                Lo más reciente primero. Todo caduca a las 24 h salvo que lo fijes.
+                Lo más reciente primero. Cada envío caduca cuando eliges, salvo que lo fijes.
               </p>
             </div>
             <span className="count-pill" aria-label={`${visibles.length} envíos visibles`}>
