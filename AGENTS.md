@@ -1,6 +1,6 @@
 # AGENTS.md · Puente
 
-Punto de entrada al proyecto de aplicación web privada **Puente** (sincronización instantánea entre móvil y ordenador).
+Punto de entrada al proyecto de aplicación web privada **Puente** (sondeo cada 10 s entre móvil y ordenador).
 
 ## Orden de lectura obligatoria
 1. `memoria.md` (Estado actual y contexto).
@@ -18,4 +18,4 @@ Punto de entrada al proyecto de aplicación web privada **Puente** (sincronizaci
 ## Estado actual
 - Fase: migración a Cloudflare terminada y desplegada.
 - URL pública: https://puente-api.qirris.workers.dev
-- Backend: Workers (`puente-api`) + D1 (`puente-datos`) + Workers KV (`puente-archivos`). Sin R2: su activación exige un paso manual en el panel de Cloudflare.
+- Servidor: Workers (`puente-api`) + D1 (`puente-datos`) + Workers KV (`puente-archivos`). Sin R2: su activación exige un paso manual en el panel de Cloudflare.

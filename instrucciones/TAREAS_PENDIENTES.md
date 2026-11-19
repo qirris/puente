@@ -18,6 +18,7 @@
 - [x] Limpiar restos de Supabase y R2 del código (pantalla muerta, constantes y textos).
 - [x] Fijar las normas de código y la convención de commits en español en `instrucciones/NORMAS_DE_CODIGO.md` y `AGENTS.md`.
 - [x] Crear el repositorio privado `qirris/puente`, conectar `origin` y subir el código.
+- [x] Pulir la redacción y la ortografía de documentación, comentarios y textos de la interfaz.
 
 ## Prueba final del usuario
 - [ ] Crear la cuenta real desde la interfaz web y probar envío entre móvil y ordenador.

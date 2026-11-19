@@ -15,9 +15,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - La primera cuenta real la crea el usuario desde la interfaz web.
 
 ## 3. Tecnologías y arquitectura
-- Frontend: React 19, TypeScript, Vite, Vitest.
-- Backend: Cloudflare Workers (`src/index.ts`), D1 (`puente-datos`) y Workers KV (`puente-archivos`).
-- Binding de D1: `PUENTE_DB`. Binding de KV: `PUENTE_ARCHIVOS`. Static assets: `PUENTE_STATIC`.
+- Interfaz: React 19, TypeScript, Vite, Vitest.
+- Servidor: Cloudflare Workers (`src/index.ts`), D1 (`puente-datos`) y Workers KV (`puente-archivos`).
+- Binding de D1: `PUENTE_DB`. Binding de KV: `PUENTE_ARCHIVOS`. Recursos estáticos: `PUENTE_STATIC`.
 - Worker: `puente-api`. Cron de limpieza: `17 * * * *`.
 - Sesiones propias en la tabla `sesiones` (tokens aleatorios de 32 bytes guardados en D1).
 - Contraseñas con PBKDF2-SHA256 (100 000 iteraciones, el máximo de Cloudflare Workers) mediante Web Crypto. El hash guarda las iteraciones usadas para verificar cuentas antiguas.
@@ -27,7 +27,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/api.ts`: cliente HTTP con token Bearer.
   - `src/lib/auth.ts`, `src/lib/sesion.ts`: autenticación y sesión persistente.
   - `src/lib/inbox.ts`: operaciones de la bandeja (sondeo cada 10 s en lugar de Realtime).
-  - `src/lib/upload.ts`: subida con progreso real via XHR.
+  - `src/lib/upload.ts`: subida con progreso real mediante XHR.
   - `migrations/0001_init.sql`, `migrations/0002_sesiones.sql`: esquema D1.
   - `wrangler.toml`: configuración de Cloudflare.
 
@@ -44,7 +44,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Subida de fotos y archivos hasta 20 MB con progreso real.
 - Bandeja cronológica con fijado, borrado y descarga.
 - URLs de archivo con el token en la query para que funcionen en `<img>` y `<a>`.
-- Limpieza de caducados: Cron del Worker y endpoint manual `/api/limpieza`.
+- Limpieza de caducados: cron del Worker y ruta manual `/api/limpieza`.
 - Interfaz responsive (móvil y escritorio).
 
 ## 6. Cambios realizados
@@ -55,7 +55,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: proxy de `/api` en Vite hacia Wrangler (puerto 8787).
 - 19/11/2026: R2 descartado porque su activación exige un paso manual en el panel de Cloudflare; almacenamiento migrado a Workers KV (misma binding `PUENTE_ARCHIVOS`).
 - 19/11/2026: PBKDF2 bajado de 150 000 a 100 000 iteraciones por un error real del runtime de Cloudflare en el registro remoto.
-- 19/11/2026: despliegue de `puente-api` con D1, KV, assets y cron.
+- 19/11/2026: despliegue de `puente-api` con D1, KV, recursos estáticos y cron.
 - 19/11/2026: inicializado el repositorio Git y creado el commit inicial (46 archivos). `.gitignore` excluye `node_modules/`, `dist/`, `.wrangler/` y `.env*`. El árbol de trabajo quedó limpio.
 - 19/11/2026: eliminada la pantalla de configuración de Supabase (código muerto), la constante `BUCKET` y el campo `isConfigured`; corregidos los textos que decían "bucket privado" y el comentario que decía R2.
 - 19/11/2026: README ampliado con la motivación del autor en primera persona y el aviso de desarrollo asistido por IA; añadida la URL pública.

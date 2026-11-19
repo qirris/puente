@@ -44,7 +44,7 @@ export function useInbox(userId: string | null): UseInboxResult {
 
       try {
         await sweepExpired().catch(() => {
-          // La limpieza es best-effort en cliente; la función programada es la principal.
+          // La limpieza se intenta en cliente; la función programada es la principal.
         })
         const next = await listItems()
         if (!mounted.current) return

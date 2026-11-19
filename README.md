@@ -6,19 +6,19 @@ Tu bandeja privada para enviar enlaces, notas, fotos y archivos entre el móvil 
 
 Lo hice para mí, porque lo necesitaba. Siempre me encontraba con el mismo problema: tener que subir archivos a un servicio u otro para pasarlos del móvil al ordenador y volver, y eso se me hacía incómodo y poco privado. Quería una bandeja sencilla, mía, donde dejar enlaces, notas, fotos y archivos y olvidarme del resto.
 
-Puente fue desarrollada con asistencia de inteligencia artificial. Yo definí qué necesitaba y revisé las decisiones; la IA me ayudó a escribir el código, los textos y a resolver los detalles técnicos.
+La aplicación Puente fue desarrollada con asistencia de inteligencia artificial. Yo definí qué necesitaba y revisé las decisiones; la IA me ayudó a escribir el código, los textos y a resolver los detalles técnicos.
 
 ## Arquitectura
 
 | Parte | Tecnología | Nombre en Cloudflare |
 | --- | --- | --- |
-| Interfaz | React + Vite + TypeScript | `puente-api` (assets) |
+| Interfaz | React + Vite + TypeScript | `puente-api` (recursos estáticos) |
 | API | Cloudflare Workers (`src/index.ts`) | `puente-api` |
 | Datos | D1 (SQLite) | `puente-datos` |
 | Archivos | Workers KV (espacio de nombres privado) | `puente-archivos` |
 
 Todo se sirve desde el mismo Worker. No hay claves secretas que configurar: las
-contraseñas se guardan hasheadas en D1 y las sesiones son tokens aleatorios
+contraseñas se guardan como hash en D1 y las sesiones son tokens aleatorios
 también en D1.
 
 ## Desarrollo local
@@ -61,7 +61,7 @@ curl -X POST http://localhost:8787/api/registro \
 ```
 
 La respuesta incluye un `token`. Úsalo como `Authorization: Bearer <token>`
-para el resto de endpoints.
+para el resto de la API.
 
 ## Estructura
 

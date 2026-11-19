@@ -197,7 +197,7 @@ function Pantry({ session, signOut }: PantryProps) {
             <IconLock size={15} />
             <span>
               Solo tu cuenta ve esta bandeja. Los archivos viven en un espacio privado y se
-              borran con el registro.
+              eliminan cuando borras el envío o cuando caduca.
             </span>
           </div>
         </aside>

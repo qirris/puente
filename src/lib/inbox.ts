@@ -29,7 +29,7 @@ export async function sweepExpired(): Promise<number> {
     })
     return datos.eliminados
   } catch {
-    // La limpieza también la hace el Cron del Worker; aquí es best-effort.
+    // La limpieza también la hace el cron del Worker; aquí se intenta si es posible.
     return 0
   }
 }
