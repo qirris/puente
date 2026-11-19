@@ -38,6 +38,9 @@ nunca se versiona.
 
 La bandeja admite búsqueda por texto, nombre de archivo o tipo MIME y filtros
 por tipo de envío. El filtrado se hace en el navegador, sin peticiones extra.
+También puedes revisar y cerrar tus sesiones activas desde el icono de
+dispositivos de la cabecera; cada una se identifica con un código público, nunca
+con el token de acceso.
 
 ### Seguridad
 
@@ -61,7 +64,7 @@ Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
-npm test            # 40 pruebas automáticas
+npm test            # 45 pruebas automáticas
 npm run build       # comprueba tipos y genera dist/
 ```
 

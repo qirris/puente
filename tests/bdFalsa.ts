@@ -10,6 +10,7 @@ const MIGRACIONES = [
   '0001_init.sql',
   '0002_sesiones.sql',
   '0003_intentos_acceso.sql',
+  '0004_sesiones_public_id.sql',
 ]
 
 export function crearBase(): DatabaseSync {

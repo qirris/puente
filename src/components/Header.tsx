@@ -1,14 +1,21 @@
 import type { Sesion } from '../lib/types'
-import { BridgeMark, IconLogout, IconRefresh } from './Icons'
+import { BridgeMark, IconDevices, IconLogout, IconRefresh } from './Icons'
 
 interface HeaderProps {
   session: Sesion
   onSignOut: () => Promise<void>
   onRefresh: () => void
   refreshing: boolean
+  onSesiones: () => void
 }
 
-export function Header({ session, onSignOut, onRefresh, refreshing }: HeaderProps) {
+export function Header({
+  session,
+  onSignOut,
+  onRefresh,
+  refreshing,
+  onSesiones,
+}: HeaderProps) {
   const email = session.user.email ?? 'Cuenta de Puente'
 
   return (
@@ -27,6 +34,15 @@ export function Header({ session, onSignOut, onRefresh, refreshing }: HeaderProp
             <span className="account-dot" aria-hidden="true" />
             <span className="account-email">{email}</span>
           </span>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onSesiones}
+            aria-label="Ver sesiones activas"
+            title="Sesiones activas"
+          >
+            <IconDevices size={19} />
+          </button>
           <button
             type="button"
             className="icon-button"

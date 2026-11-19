@@ -10,16 +10,17 @@ npm run test:watch
 npm run build   # comprueba tipos de aplicación, Worker y pruebas
 ```
 
-Las 32 pruebas están repartidas así:
+Las 45 pruebas están repartidas así:
 
 | Archivo | Qué cubre |
 | --- | --- |
 | `src/lib/validation.test.ts` | Enlaces, texto, tamaño de archivos y nombres seguros. |
 | `src/lib/format.test.ts` | Tamaños, fechas, caducidad y etiquetas en español. |
-| `src/index.test.ts` | Registro, acceso, límite de intentos, cabeceras, CORS, sesión en URL, archivos y limpieza. |
+| `src/lib/filtrado.test.ts` | Búsqueda por texto, acentos, nombre de archivo y filtros por tipo. |
+| `src/index.test.ts` | Registro, acceso, límite de intentos, cabeceras, CORS, sesión en URL, sesiones activas, archivos y limpieza. |
 
 Las pruebas del Worker usan `tests/bdFalsa.ts`: una base SQLite en memoria con
-`node:sqlite` a la que se aplican las tres migraciones reales, más un KV falso.
+`node:sqlite` a la que se aplican las cuatro migraciones reales, más un KV falso.
 Por eso un cambio en `migrations/` rompe las pruebas si no es compatible con la
 API que usa el Worker.
 

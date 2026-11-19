@@ -2100,6 +2100,163 @@ a {
   }
 }
 
+/* ---------- Panel de sesiones ---------- */
+
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(20, 17, 14, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: fade-in 0.18s ease-out;
+}
+
+.panel-card {
+  width: min(560px, 100%);
+  max-height: min(86dvh, 720px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: 0 40px 90px -45px rgba(20, 17, 14, 0.8);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.panel-head h2 {
+  margin: 5px 0 0;
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 550;
+  letter-spacing: -0.035em;
+}
+
+.panel-intro {
+  margin: 12px 0 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.sesiones-cargando {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.panel-empty {
+  margin: 0;
+  padding: 24px 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.sesiones-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sesion-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.sesion-fila.actual {
+  border-color: rgba(47, 107, 79, 0.35);
+  background: var(--green-soft);
+}
+
+.sesion-icono {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--paper);
+  color: var(--ink-soft);
+}
+
+.sesion-fila.actual .sesion-icono {
+  background: var(--surface-raised);
+  color: var(--green);
+}
+
+.sesion-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.sesion-info strong {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.sesion-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.sesion-etiqueta {
+  margin-left: auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sesion-fila > .button {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.panel-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px dashed var(--line);
+}
+
+.panel-note {
+  margin: 14px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 /* ---------- Pie ---------- */
 
 .app-footer {

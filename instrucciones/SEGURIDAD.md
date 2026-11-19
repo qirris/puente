@@ -16,6 +16,16 @@ navegador. Este documento describe qué se aplica y qué limitaciones se asumen.
 - **Cierre de sesión:** elimina el token de D1, así que invalida la sesión de
   verdad.
 
+## Sesiones activas
+
+- `GET /api/sesiones` devuelve el identificador público, la fecha de creación,
+  la caducidad y si es la sesión actual. Nunca devuelve tokens.
+- `DELETE /api/sesiones/:id` cierra solo una sesión del usuario autenticado. Un
+  identificador ajeno o inexistente responde 404.
+- El identificador público son 16 bytes en hexadecimal. No es un secreto, pero
+  tampoco permite iniciar sesión: solo nombra la fila en la API.
+- La limpieza programada elimina también las sesiones caducadas.
+
 ## Límite de intentos
 
 - 5 fallos permitidos por combinación de correo y dirección IP.

@@ -9,6 +9,8 @@ y [Semantic Versioning](https://semver.org/lang/es/).
 
 - Búsqueda en la bandeja por texto, nombre de archivo o tipo MIME, con filtros
   por tipo de envío. Todo se calcula en el navegador, sin cambios en la API.
+- Panel de sesiones activas para ver y cerrar dispositivos. Cada sesión se
+  identifica con un código público: la API nunca devuelve tokens al listarlas.
 
 ### Cambiado
 

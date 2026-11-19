@@ -242,3 +242,131 @@ describe('mantenimiento', () => {
     expect(despues.n).toBe(0)
   })
 })
+
+describe('sesiones activas', () => {
+  const Bearer = (token: string) => ({ Authorization: `Bearer ${token}` })
+
+  it('guarda un identificador público distinto del token', async () => {
+    const { base, json } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: 'ana@ejemplo.com',
+      password: '123456',
+    })
+    const { token } = await registro.json()
+
+    const fila = base.prepare('select public_id from sesiones where token = ?')
+      .get(token) as { public_id: string }
+    expect(fila.public_id).toMatch(/^[0-9a-f]{32}$/)
+    expect(fila.public_id).not.toBe(token)
+  })
+
+  it('lista las sesiones sin devolver ningún token', async () => {
+    const { json, llamar } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: 'ana@ejemplo.com',
+      password: '123456',
+    })
+    const { token } = await registro.json()
+    const acceso = await json(
+      '/api/acceso',
+      'POST',
+      { email: 'ana@ejemplo.com', password: '123456' },
+      '198.51.100.77',
+    )
+    const { token: tokenSegunda } = await acceso.json()
+
+    const respuesta = await llamar('/api/sesiones', { headers: Bearer(token) })
+    expect(respuesta.status).toBe(200)
+    const datos = await respuesta.json()
+    expect(datos.sesiones).toHaveLength(2)
+    expect(datos.sesiones.filter((sesion: { actual: boolean }) => sesion.actual)).toHaveLength(1)
+
+    const texto = JSON.stringify(datos)
+    expect(texto).not.toContain(token)
+    expect(texto).not.toContain(tokenSegunda)
+  })
+
+  it('cierra otra sesión por su id público y avisa si no existe', async () => {
+    const { base, json, llamar } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: 'ana@ejemplo.com',
+      password: '123456',
+    })
+    const { token } = await registro.json()
+    const acceso = await json(
+      '/api/acceso',
+      'POST',
+      { email: 'ana@ejemplo.com', password: '123456' },
+      '198.51.100.78',
+    )
+    const { token: tokenOtra } = await acceso.json()
+    const idOtra = (
+      base.prepare('select public_id from sesiones where token = ?')
+        .get(tokenOtra) as { public_id: string }
+    ).public_id
+
+    const cierre = await llamar(`/api/sesiones/${idOtra}`, {
+      method: 'DELETE',
+      headers: Bearer(token),
+    })
+    expect(cierre.status).toBe(200)
+
+    const datos = await (
+      await llamar('/api/sesiones', { headers: Bearer(token) })
+    ).json()
+    expect(datos.sesiones).toHaveLength(1)
+    expect(
+      (await llamar('/api/sesiones/no-existe', {
+        method: 'DELETE',
+        headers: Bearer(token),
+      })).status,
+    ).toBe(404)
+  })
+
+  it('no permite cerrar sesiones de otra cuenta', async () => {
+    const { base, json, llamar } = crearLlamadas()
+    const primera = await json('/api/registro', 'POST', {
+      email: 'ana@ejemplo.com',
+      password: '123456',
+    })
+    const { token: tokenAna } = await primera.json()
+    const segunda = await json('/api/registro', 'POST', {
+      email: 'beto@ejemplo.com',
+      password: '123456',
+    })
+    const { token: tokenBeto } = await segunda.json()
+    const idBeto = (
+      base.prepare('select public_id from sesiones where token = ?')
+        .get(tokenBeto) as { public_id: string }
+    ).public_id
+
+    const respuesta = await llamar(`/api/sesiones/${idBeto}`, {
+      method: 'DELETE',
+      headers: Bearer(tokenAna),
+    })
+    expect(respuesta.status).toBe(404)
+    expect(
+      base.prepare('select public_id from sesiones where public_id = ?').get(idBeto),
+    ).toBeTruthy()
+  })
+
+  it('borra las sesiones caducadas en la tarea programada', async () => {
+    const { base, env, json } = crearLlamadas()
+    await json('/api/registro', 'POST', {
+      email: 'ana@ejemplo.com',
+      password: '123456',
+    })
+    base.prepare('update sesiones set expires_at = ?')
+      .run('2020-01-01T00:00:00.000Z')
+
+    await worker.scheduled(
+      { scheduledTime: Date.now() } as Parameters<typeof worker.scheduled>[0],
+      env,
+      contexto,
+    )
+
+    const despues = base.prepare('select count(*) as n from sesiones')
+      .get() as { n: number }
+    expect(despues.n).toBe(0)
+  })
+})

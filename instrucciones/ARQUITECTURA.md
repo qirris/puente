@@ -30,6 +30,8 @@ Cloudflare Worker  puente-api
 | `lib/inbox.ts` | Tipos y acceso a los envíos. |
 | `lib/filtrado.ts` | Búsqueda y filtros de la bandeja, sin tocar la API. |
 | `components/InboxFilters.tsx` | Campo de búsqueda y chips de tipo. |
+| `lib/sesiones.ts` | Listado y cierre de sesiones activas. |
+| `components/SesionesPanel.tsx` | Panel para revisar y cerrar sesiones. |
 | `lib/upload.ts` | Subida de archivos con barra de progreso. |
 | `lib/validation.ts` | Normalización de enlaces y validación de archivos. |
 | `lib/format.ts` | Tamaños, fechas relativas y etiquetas en español. |
@@ -42,6 +44,8 @@ Cloudflare Worker  puente-api
 | `/api/acceso` | POST | Inicia sesión y aplica el límite de intentos. |
 | `/api/salir` | POST | Borra la sesión en D1. |
 | `/api/sesion` | GET | Devuelve el usuario de la sesión actual. |
+| `/api/sesiones` | GET | Lista las sesiones activas con su id público, sin tokens. |
+| `/api/sesiones/:id` | DELETE | Cierra una sesión propia por su id público. |
 | `/api/envios` | GET / POST | Lista o crea envíos de texto y enlace. |
 | `/api/envios/:id` | PATCH / DELETE | Fija, desfija o borra un envío. |
 | `/api/archivos` | POST | Sube un archivo a KV y crea su registro en D1. |
@@ -54,10 +58,18 @@ Cloudflare Worker  puente-api
 búsqueda y los filtros solo en el navegador. No hay rutas ni consultas nuevas:
 la lista llega de `/api/envios` y se filtra en memoria.
 
+## Sesiones activas
+
+`lib/sesiones.ts` consulta `GET /api/sesiones` y cierra sesiones con
+`DELETE /api/sesiones/:id`. El Worker devuelve un `public_id` aleatorio de 16
+bytes, la fecha de creación, la caducidad y si es la sesión actual; en ningún
+caso devuelve el token. La migración `0004_sesiones_public_id.sql` añadió esa
+columna y rellenó las sesiones ya abiertas.
+
 Todas las rutas excepto registro, acceso y `OPTIONS` exigen una sesión válida.
 El trabajador programado (`17 * * * *`) llama a la misma limpieza que
-`/api/limpieza`: borra archivos caducados, registros caducados e intentos de
-acceso antiguos.
+`/api/limpieza`: borra archivos caducados, registros caducados, sesiones
+caducadas e intentos de acceso antiguos.
 
 ## Esquema de datos
 
@@ -66,6 +78,7 @@ Las migraciones están en `migrations/` y se aplican con Wrangler:
 - `0001_init.sql`: `users` e `items`, con restricciones de contenido y tamaño.
 - `0002_sesiones.sql`: tokens de sesión con expiración a 30 días.
 - `0003_intentos_acceso.sql`: fallos de acceso por clave `IP|correo`.
+- `0004_sesiones_public_id.sql`: identificador público de cada sesión.
 
 `items` guarda metadatos y, para imágenes y archivos, la ruta del objeto en KV.
 Los bytes viven siempre en `puente-archivos`; D1 nunca guarda archivos.

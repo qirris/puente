@@ -55,6 +55,14 @@ La interfaz se sirve desde el mismo Worker, así que `Access-Control-Allow-Origi
 *` no aportaba nada y ampliaba la superficie de ataque. Se eliminó y se añadieron
 CSP, `X-Frame-Options`, `nosniff` y `Referrer-Policy` en todas las respuestas.
 
+## 19/11/2026 · Identificador público para las sesiones
+
+Para listar y cerrar sesiones hacía falta nombrarlas sin enviar el token al
+navegador. Cada sesión guarda un `public_id` aleatorio de 16 bytes en hexadecimal.
+Solo identifica la fila dentro de `/api/sesiones`, así que no abre la cuenta por
+sí mismo. La migración `0004_sesiones_public_id.sql` rellenó las sesiones ya
+abiertas y el Worker genera el valor en cada acceso nuevo.
+
 ## 19/11/2026 · Búsqueda y filtros solo en el cliente
 
 La bandeja cabe en memoria y no justificaba índices nuevos en D1. Buscar y filtrar

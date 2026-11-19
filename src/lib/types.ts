@@ -31,6 +31,14 @@ export interface Sesion {
   }
 }
 
+/** Sesión activa tal como la ve el usuario: nunca incluye el token. */
+export interface SesionActiva {
+  id: string
+  creada: string
+  caduca: string
+  actual: boolean
+}
+
 export type ToastTone = 'success' | 'error' | 'info'
 
 export interface ToastMessage {

@@ -21,7 +21,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Servidor: Cloudflare Workers (`src/index.ts`), D1 (`puente-datos`) y Workers KV (`puente-archivos`).
 - Binding de D1: `PUENTE_DB`. Binding de KV: `PUENTE_ARCHIVOS`. Recursos estáticos: `PUENTE_STATIC`.
 - Worker: `puente-api`. Cron de limpieza: `17 * * * *`.
-- Sesiones propias en la tabla `sesiones` (tokens aleatorios de 32 bytes guardados en D1).
+- Sesiones propias en la tabla `sesiones` (tokens aleatorios de 32 bytes guardados en D1 y un `public_id` de 16 bytes para identificarlas sin revelar el token).
 - Contraseñas con PBKDF2-SHA256 (100 000 iteraciones, el máximo de Cloudflare Workers) mediante Web Crypto. El hash guarda las iteraciones usadas para verificar cuentas antiguas.
 - Diseño editorial minimalista con `Fraunces` y `Manrope`, alojadas en `public/fuentes/` (WOFF2 con licencia OFL); la interfaz no pide fuentes a Google.
 - Módulos principales:
@@ -31,10 +31,12 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/inbox.ts`: operaciones de la bandeja (sondeo cada 10 s en lugar de Realtime).
   - `src/lib/filtrado.ts`: búsqueda y filtros de la bandeja solo en el cliente.
   - `src/components/InboxFilters.tsx`: campo de búsqueda y chips de tipo.
+  - `src/lib/sesiones.ts`: listado y cierre de sesiones activas.
+  - `src/components/SesionesPanel.tsx`: panel para revisar y cerrar sesiones.
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
-  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`: esquema D1.
+  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 40 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 45 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -61,6 +63,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Fuentes locales: la interfaz carga los WOFF2 desde `/fuentes/` sin peticiones a terceros.
 - Bandeja con búsqueda por contenido, nombre de archivo y tipo MIME, y filtros
   Todo / Enlaces / Notas / Fotos / Archivos; todo se calcula en el navegador.
+- Panel de sesiones activas: permite ver los dispositivos con acceso y cerrar
+  los que no se reconozcan, identificados por un código público y nunca por el token.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -85,6 +89,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: `@types/node` movido a `devDependencies`, añadidos metadatos del paquete, `engines`, `.nvmrc`, CI y Dependabot.
 - 19/11/2026: fuentes locales: WOFF2 de Fraunces (normal e itálica) y Manrope guardados en `public/fuentes/` con sus licencias OFL; eliminados los `<link>` a Google Fonts, declarados los `@font-face` en `src/styles.css` y simplificada la CSP a `font-src 'self'`.
 - 19/11/2026: búsqueda y filtros en la bandeja: función pura `filtrarEnvios` con 8 pruebas, componente `InboxFilters`, estado «sin resultados» y estilos responsive; sin cambios en la API ni en D1.
+- 19/11/2026: sesiones activas: migración `0004_sesiones_public_id.sql` aplicada en local y remoto, rutas `GET /api/sesiones` y `DELETE /api/sesiones/:id`, 5 pruebas nuevas, panel `SesionesPanel` y botón en la cabecera; desplegado y verificado en remoto.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -101,6 +106,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - `run_worker_first = true` en los recursos estáticos para que el Worker pueda añadir cabeceras de seguridad a la interfaz.
 - Las fuentes se alojan en el propio proyecto: evitan dependencias de terceros y permiten una CSP más estricta sin dominios de Google.
 - La búsqueda y los filtros de la bandeja se resuelven en el cliente: la lista ya está en memoria y no merece índices nuevos ni rutas adicionales.
+- Cada sesión tiene un `public_id` aleatorio de 16 bytes: permite listarla y cerrarla sin enviar el token al navegador. No es un secreto, pero tampoco autentica.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -118,6 +124,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
 - 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
 - 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
+- 19/11/2026: con las sesiones activas, `npm run build` (52 módulos) y `npm test` (45 pruebas, 4 archivos) correctos; migración 0004 aplicada en local y remoto; desplegada la versión `fcceef93-2bb7-4851-a34a-693fd888d3b2`. En remoto: `GET`/`DELETE /api/sesiones` sin token devuelven 401; el JS publicado contiene «Sesiones activas», «Cerrar las demás», «Este dispositivo» y «Ver sesiones activas»; el CSS sirve `.sesion-fila.actual`.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -142,7 +149,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Añadir tag y release v1.0.0 y ajustar la configuración de GitHub.
 - [x] Alojar las fuentes localmente y quitar Google Fonts de la CSP.
 - [x] Añadir búsqueda y filtros por tipo en la bandeja.
-- [ ] Listar y cerrar sesiones activas.
+- [x] Listar y cerrar sesiones activas.
 - [ ] Código de recuperación de contraseña mostrado una sola vez.
 - [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [ ] Publicar v1.1.0 con las mejoras anteriores.
@@ -155,3 +162,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: revisión profesional integral: pruebas automáticas, seguridad reforzada sin cookies, documentación completa, integración continua, observabilidad y cierre de GitHub con versión 1.0.0.
 - 19/11/2026: primera mejora posterior a v1.0.0: fuentes Fraunces y Manrope alojadas en el proyecto, sin peticiones a Google y con CSP simplificada.
 - 19/11/2026: segunda mejora: búsqueda y filtros por tipo en la bandeja, resueltos en el cliente y con 8 pruebas nuevas.
+- 19/11/2026: tercera mejora: panel de sesiones activas con identificador público, rutas propias y limpieza de sesiones caducadas.

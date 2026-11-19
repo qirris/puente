@@ -140,6 +140,18 @@ export function IconTrash(props: IconProps) {
   )
 }
 
+export function IconDevices(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="4" width="14" height="10" rx="2" />
+      <path d="M7 18h6" />
+      <path d="M10 14v4" />
+      <rect x="17" y="10" width="5" height="11" rx="1.5" />
+      <path d="M19 18h1" />
+    </Icon>
+  )
+}
+
 export function IconSearch(props: IconProps) {
   return (
     <Icon {...props}>

@@ -54,6 +54,7 @@ interface SesionFila {
   token: string
   user_id: string
   email: string
+  public_id: string | null
 }
 
 interface Envio {
@@ -74,6 +75,7 @@ interface UsuarioSesion {
   id: string
   email: string
   token: string
+  publicId: string
 }
 
 const LIMITE_ARCHIVO = 20 * 1024 * 1024
@@ -248,10 +250,11 @@ async function borrarIntento(env: Env, clave: string): Promise<void> {
 
 async function crearSesion(env: Env, userId: string): Promise<string> {
   const token = nuevoToken()
+  const publicId = crypto.randomUUID().replace(/-/g, '')
   await env.PUENTE_DB.prepare(
-    'insert into sesiones (token, user_id) values (?, ?)',
+    'insert into sesiones (token, public_id, user_id) values (?, ?, ?)',
   )
-    .bind(token, userId)
+    .bind(token, publicId, userId)
     .run()
   return token
 }
@@ -268,7 +271,7 @@ async function usuarioDe(request: Request, env: Env): Promise<UsuarioSesion | nu
   const token = tokenDe(request)
   if (!token) return null
   const fila = await env.PUENTE_DB.prepare(
-    `select s.token, s.user_id, u.email
+    `select s.token, s.public_id, s.user_id, u.email
        from sesiones s
        join users u on u.id = s.user_id
       where s.token = ? and s.expires_at > ?`,
@@ -276,7 +279,12 @@ async function usuarioDe(request: Request, env: Env): Promise<UsuarioSesion | nu
     .bind(token, ahora())
     .first<SesionFila>()
   if (!fila) return null
-  return { id: fila.user_id, email: fila.email, token: fila.token }
+  return {
+    id: fila.user_id,
+    email: fila.email,
+    token: fila.token,
+    publicId: fila.public_id ?? '',
+  }
 }
 
 function itemDe(envio: Envio): Record<string, unknown> {
@@ -325,6 +333,10 @@ async function limpiarCaducados(env: Env): Promise<number> {
 
   await env.PUENTE_DB.prepare('delete from intentos_acceso where ultima_at < ?')
     .bind(new Date(Date.now() - VENTANA_INTENTOS).toISOString())
+    .run()
+
+  await env.PUENTE_DB.prepare('delete from sesiones where expires_at < ?')
+    .bind(corte)
     .run()
 
   for (let ronda = 0; ronda < 10; ronda += 1) {
@@ -452,6 +464,40 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
 
   if (ruta === '/api/sesion' && metodo === 'GET') {
     return json({ user: { id: usuario.id, email: usuario.email } })
+  }
+
+  // Sesiones activas: se identifican por un id público, nunca por el token.
+  if (ruta === '/api/sesiones' && metodo === 'GET') {
+    const filas = await env.PUENTE_DB.prepare(
+      `select public_id, created_at, expires_at from sesiones
+        where user_id = ? and expires_at > ? order by created_at desc`,
+    )
+      .bind(usuario.id, ahora())
+      .all<{ public_id: string | null; created_at: string; expires_at: string }>()
+
+    return json({
+      sesiones: filas.results.map((fila) => ({
+        id: fila.public_id ?? '',
+        creada: fila.created_at,
+        caduca: fila.expires_at,
+        actual: fila.public_id === usuario.publicId,
+      })),
+    })
+  }
+
+  const coincideSesion = ruta.match(/^\/api\/sesiones\/([^/]+)$/)
+  if (coincideSesion && metodo === 'DELETE') {
+    const id = coincideSesion[1] ?? ''
+    const fila = await env.PUENTE_DB.prepare(
+      'select public_id from sesiones where public_id = ? and user_id = ?',
+    )
+      .bind(id, usuario.id)
+      .first()
+    if (!fila) return fallo('Sesión no encontrada.', 404)
+    await env.PUENTE_DB.prepare('delete from sesiones where public_id = ? and user_id = ?')
+      .bind(id, usuario.id)
+      .run()
+    return json({ ok: true })
   }
 
   // Bandeja.

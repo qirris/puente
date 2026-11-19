@@ -14,6 +14,7 @@ import { Composer } from './components/Composer'
 import { EmptyState, InboxSkeleton, Lightbox, NoResults } from './components/EmptyState'
 import { Header } from './components/Header'
 import { InboxFilters } from './components/InboxFilters'
+import { SesionesPanel } from './components/SesionesPanel'
 import { Splash } from './components/Splash'
 import { ToastViewport } from './components/ToastViewport'
 import { IconAlert, IconLock, IconRefresh, IconWifiOff } from './components/Icons'
@@ -40,6 +41,7 @@ function Pantry({ session, signOut }: PantryProps) {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [now, setNow] = useState(() => Date.now())
   const [preview, setPreview] = useState<InboxItem | null>(null)
+  const [verSesiones, setVerSesiones] = useState(false)
   const [downloadingPreview, setDownloadingPreview] = useState(false)
   const [online, setOnline] = useState(() => navigator.onLine)
   const [busqueda, setBusqueda] = useState('')
@@ -175,6 +177,8 @@ function Pantry({ session, signOut }: PantryProps) {
   )
 
   const closePreview = useCallback(() => setPreview(null), [])
+  const abrirSesiones = useCallback(() => setVerSesiones(true), [])
+  const cerrarSesiones = useCallback(() => setVerSesiones(false), [])
 
   const handlePreviewDownload = useCallback(async () => {
     if (!preview || downloadingPreview) return
@@ -195,6 +199,7 @@ function Pantry({ session, signOut }: PantryProps) {
         onSignOut={signOut}
         onRefresh={() => void refresh()}
         refreshing={refreshing}
+        onSesiones={abrirSesiones}
       />
 
       {!online ? (
@@ -282,6 +287,14 @@ function Pantry({ session, signOut }: PantryProps) {
         <span aria-hidden="true">·</span>
         <span>Diseñado para ir y volver</span>
       </footer>
+
+      {verSesiones ? (
+        <SesionesPanel
+          onClose={cerrarSesiones}
+          onCerrarActual={signOut}
+          notify={notify}
+        />
+      ) : null}
 
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
 
