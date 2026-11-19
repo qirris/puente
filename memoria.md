@@ -9,6 +9,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 ## 2. Estado actual
 - Fase: migración completada y desplegada el 19/11/2026.
 - URL pública: https://puente-api.qirris.workers.dev
+- Repositorio: https://github.com/qirris/puente (privado, elección del usuario "por ahora").
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
 - Base de datos remota limpia: se eliminaron todos los datos de prueba (0 usuarios, 0 envíos, 0 sesiones).
 - La primera cuenta real la crea el usuario desde la interfaz web.
@@ -31,8 +32,9 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `wrangler.toml`: configuración de Cloudflare.
 
 ## 4. Instrucciones y restricciones
-- Consultar `instrucciones/INSTRUCCIONES_GENERALES.md`.
-- Todo en español (UI, código, documentación).
+- Consultar `instrucciones/INSTRUCCIONES_GENERALES.md` e `instrucciones/NORMAS_DE_CODIGO.md`.
+- Todo en español (UI, código, documentación y mensajes de commit).
+- Convención de commits: `tipo: descripción en minúsculas, imperativa y sin punto`.
 - No guardar secretos en archivos `.md`.
 - El código real manda sobre la memoria.
 
@@ -55,6 +57,10 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: PBKDF2 bajado de 150 000 a 100 000 iteraciones por un error real del runtime de Cloudflare en el registro remoto.
 - 19/11/2026: despliegue de `puente-api` con D1, KV, assets y cron.
 - 19/11/2026: inicializado el repositorio Git y creado el commit inicial (46 archivos). `.gitignore` excluye `node_modules/`, `dist/`, `.wrangler/` y `.env*`. El árbol de trabajo quedó limpio.
+- 19/11/2026: eliminada la pantalla de configuración de Supabase (código muerto), la constante `BUCKET` y el campo `isConfigured`; corregidos los textos que decían "bucket privado" y el comentario que decía R2.
+- 19/11/2026: README ampliado con la motivación del autor en primera persona y el aviso de desarrollo asistido por IA; añadida la URL pública.
+- 19/11/2026: creado `instrucciones/NORMAS_DE_CODIGO.md` con la convención de commits en español, y añadida la regla a `AGENTS.md`. Todos los mensajes de commit del proyecto están en español.
+- 19/11/2026: creado el repositorio privado `qirris/puente` en GitHub con descripción y topics ligados al proyecto.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -62,13 +68,16 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Sesiones en D1 en lugar de secretos HMAC: evita configurar variables sensibles a mano.
 - Sondeo cada 10 s en lugar de Realtime: D1 no ofrece suscripciones en tiempo real.
 - El Worker es la única frontera de seguridad: D1 no tiene RLS, así que cada consulta lleva `user_id`.
-- Los nombres de resources llevan siempre el prefijo `puente`.
+- Los nombres de recursos llevan siempre el prefijo `puente`.
+- El repositorio de GitHub es privado a petición del usuario, por ahora.
+- La motivación personal y el aviso de asistencia por IA se documentan en el README, redactados en primera persona.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
 - 19/11/2026: API local (`wrangler dev --local`) con KV: registro, acceso, creación de envío, listado, fijado, subida de archivo y descarga con token en query. Todas correctas.
 - 19/11/2026: primer despliegue detectó `Pbkdf2 failed: iteration counts above 100000 are not supported`; corregido y vuelto a desplegar.
 - 19/11/2026: API en la URL pública: registro (201), acceso (200), envío de texto (201), listado (200), subida (201), descarga del archivo (200 con el contenido correcto) y página principal (200).
+- 19/11/2026: tras la limpieza de código, `npm run build` correcto (48 módulos), redespliegue correcto y comprobación en la URL pública: página principal (200) y `/api/sesion` sin token (401, respuesta esperada).
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -80,10 +89,11 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 ## 10. Próximos pasos
 - [x] Desplegar `puente-api` y anotar la URL pública.
 - [x] Probar registro/envío/descarga contra la URL desplegada.
-- [x] Añadir README con las instrucciones de arranque local.
+- [x] Añadir README con las instrucciones de arranque local, la motivación y el aviso de IA.
+- [x] Crear el repositorio privado `qirris/puente`, fijar las normas en español y subir el código.
 - [ ] El usuario crea su cuenta real desde https://puente-api.qirris.workers.dev y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
 - 16/11/2026: inicialización del proyecto y sistema de memoria (fase Supabase).
 - 18/11/2026: traslado a `Documents\NEGOCIOS` y cambio de rumbo a Cloudflare.
-- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto y commit inicial en Git.
+- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español y repositorio privado en GitHub.

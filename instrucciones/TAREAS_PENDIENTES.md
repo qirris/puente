@@ -13,10 +13,14 @@
 - [x] Corregir PBKDF2 a 100 000 iteraciones (límite de Cloudflare Workers) y verificar en remoto.
 - [x] Probar registro, envío, subida y descarga contra la URL pública.
 - [x] Eliminar los datos de prueba de la D1 remota y la clave de prueba de KV.
-- [x] Redactar README con el arranque local y el despliegue.
+- [x] Redactar README con el arranque local, el despliegue, la motivación personal y el aviso de IA.
 - [x] Inicializar Git, excluir artefactos locales y crear el commit inicial.
+- [x] Limpiar restos de Supabase y R2 del código (pantalla muerta, constantes y textos).
+- [x] Fijar las normas de código y la convención de commits en español en `instrucciones/NORMAS_DE_CODIGO.md` y `AGENTS.md`.
+- [x] Crear el repositorio privado `qirris/puente`, conectar `origin` y subir el código.
+
+## Prueba final del usuario
 - [ ] Crear la cuenta real desde la interfaz web y probar envío entre móvil y ordenador.
-- [ ] (Opcional) Añadir un remoto de GitHub y subir el commit si quieres respaldo externo.
 
 ## Histórico (Supabase, superado el 19/11/2026)
 - [x] Desarrollo del MVP original (React 19 + TypeScript + Supabase).
