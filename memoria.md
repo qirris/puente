@@ -9,9 +9,11 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 ## 2. Estado actual
 - Fase: migración completada y desplegada el 19/11/2026.
 - URL pública: https://puente-api.qirris.workers.dev
-- Repositorio: https://github.com/qirris/puente (privado, elección del usuario "por ahora").
+- Repositorio: https://github.com/qirris/puente (público desde el 19/11/2026, previa aprobación del usuario).
+- El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
+- Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
-- Base de datos remota limpia: se eliminaron todos los datos de prueba (0 usuarios, 0 envíos, 0 sesiones).
+- Base de datos remota limpia: se eliminaron todos los datos de prueba, incluida la cuenta creada para probar el código de invitación.
 - La primera cuenta real la crea el usuario desde la interfaz web.
 
 ## 3. Tecnologías y arquitectura
@@ -40,6 +42,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 
 ## 5. Funcionalidades implementadas
 - Registro e inicio de sesión con contraseña hasheada; cierre de sesión invalida el token.
+- El registro exige un código de invitación cuando el secreto `PUENTE_CODIGO_INVITACION` está configurado; sin secreto queda abierto solo para desarrollo local.
 - Envío de texto y enlaces, con validación de longitud y formato.
 - Subida de fotos y archivos hasta 20 MB con progreso real.
 - Bandeja cronológica con fijado, borrado y descarga.
@@ -61,6 +64,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: README ampliado con la motivación del autor en primera persona y el aviso de desarrollo asistido por IA; añadida la URL pública.
 - 19/11/2026: creado `instrucciones/NORMAS_DE_CODIGO.md` con la convención de commits en español, y añadida la regla a `AGENTS.md`. Todos los mensajes de commit del proyecto están en español.
 - 19/11/2026: creado el repositorio privado `qirris/puente` en GitHub con descripción y topics ligados al proyecto.
+- 19/11/2026: preparada la publicación segura: licencia MIT, sección "Ámbito del proyecto" en el README, campo "Código de invitación" en el registro y validación en el Worker mediante el secreto `PUENTE_CODIGO_INVITACION`.
+- 19/11/2026: compilación y despliegue correctos; registro sin código rechazado (403) y registro con código aceptado (201); cuenta de prueba eliminada después.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -69,7 +74,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Sondeo cada 10 s en lugar de Realtime: D1 no ofrece suscripciones en tiempo real.
 - El Worker es la única frontera de seguridad: D1 no tiene RLS, así que cada consulta lleva `user_id`.
 - Los nombres de recursos llevan siempre el prefijo `puente`.
-- El repositorio de GitHub es privado a petición del usuario, por ahora.
+- El repositorio de GitHub se hizo público a petición del usuario, con licencia MIT y registro protegido para preservar el uso personal.
+- El código de invitación vive solo como secreto de Cloudflare; no se escribe en archivos ni en commits.
 - La motivación personal y el aviso de asistencia por IA se documentan en el README, redactados en primera persona.
 
 ## 8. Pruebas verificadas
@@ -78,6 +84,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: primer despliegue detectó `Pbkdf2 failed: iteration counts above 100000 are not supported`; corregido y vuelto a desplegar.
 - 19/11/2026: API en la URL pública: registro (201), acceso (200), envío de texto (201), listado (200), subida (201), descarga del archivo (200 con el contenido correcto) y página principal (200).
 - 19/11/2026: tras la limpieza de código, `npm run build` correcto (48 módulos), redespliegue correcto y comprobación en la URL pública: página principal (200) y `/api/sesion` sin token (401, respuesta esperada).
+- 19/11/2026: con el código de invitación activo, `npm run build` y despliegue correctos; `/api/registro` sin código devuelve 403 con "El código de invitación no es correcto." y con código devuelve 201. Cuenta de prueba eliminada de la D1 remota.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -90,10 +97,11 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Desplegar `puente-api` y anotar la URL pública.
 - [x] Probar registro/envío/descarga contra la URL desplegada.
 - [x] Añadir README con las instrucciones de arranque local, la motivación y el aviso de IA.
-- [x] Crear el repositorio privado `qirris/puente`, fijar las normas en español y subir el código.
-- [ ] El usuario crea su cuenta real desde https://puente-api.qirris.workers.dev y prueba la app desde móvil y ordenador.
+- [x] Crear el repositorio `qirris/puente`, fijar las normas en español y subir el código.
+- [x] Publicar el repositorio con licencia MIT, aviso de proyecto personal y registro protegido con código de invitación.
+- [ ] El usuario crea su cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
 - 16/11/2026: inicialización del proyecto y sistema de memoria (fase Supabase).
 - 18/11/2026: traslado a `Documents\NEGOCIOS` y cambio de rumbo a Cloudflare.
-- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español y repositorio privado en GitHub.
+- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub y publicación segura con licencia MIT, ámbito personal y registro protegido.

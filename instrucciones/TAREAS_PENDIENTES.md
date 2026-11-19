@@ -17,11 +17,15 @@
 - [x] Inicializar Git, excluir artefactos locales y crear el commit inicial.
 - [x] Limpiar restos de Supabase y R2 del código (pantalla muerta, constantes y textos).
 - [x] Fijar las normas de código y la convención de commits en español en `instrucciones/NORMAS_DE_CODIGO.md` y `AGENTS.md`.
-- [x] Crear el repositorio privado `qirris/puente`, conectar `origin` y subir el código.
+- [x] Crear el repositorio `qirris/puente` (inicialmente privado), conectar `origin` y subir el código.
 - [x] Pulir la redacción y la ortografía de documentación, comentarios y textos de la interfaz.
+- [x] Añadir licencia MIT y aviso de ámbito personal en el README.
+- [x] Proteger el registro con código de invitación guardado como secreto en Cloudflare.
+- [x] Probar el registro con y sin código (403/201) y dejar la D1 remota limpia.
+- [x] Publicar el repositorio `qirris/puente` en GitHub.
 
 ## Prueba final del usuario
-- [ ] Crear la cuenta real desde la interfaz web y probar envío entre móvil y ordenador.
+- [ ] Crear la cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y probar envío entre móvil y ordenador.
 
 ## Histórico (Supabase, superado el 19/11/2026)
 - [x] Desarrollo del MVP original (React 19 + TypeScript + Supabase).

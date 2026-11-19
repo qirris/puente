@@ -18,4 +18,6 @@ Punto de entrada al proyecto de aplicación web privada **Puente** (sondeo cada 
 ## Estado actual
 - Fase: migración a Cloudflare terminada y desplegada.
 - URL pública: https://puente-api.qirris.workers.dev
+- Repositorio: https://github.com/qirris/puente (público, licencia MIT).
+- El registro está protegido por el secreto `PUENTE_CODIGO_INVITACION` de Cloudflare. Nunca escribir su valor en los archivos `.md`.
 - Servidor: Workers (`puente-api`) + D1 (`puente-datos`) + Workers KV (`puente-archivos`). Sin R2: su activación exige un paso manual en el panel de Cloudflare.

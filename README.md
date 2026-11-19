@@ -8,6 +8,17 @@ Lo hice para mí, porque lo necesitaba. Siempre me encontraba con el mismo probl
 
 La aplicación Puente fue desarrollada con asistencia de inteligencia artificial. Yo definí qué necesitaba y revisé las decisiones; la IA me ayudó a escribir el código, los textos y a resolver los detalles técnicos.
 
+## Ámbito del proyecto
+
+Puente es un proyecto personal, no un servicio abierto al público. El registro
+nuevo exige un código de invitación, que se guarda en Cloudflare como secreto
+`PUENTE_CODIGO_INVITACION` (nunca en el repositorio). Si el secreto no está
+configurado, el registro queda abierto: eso solo se recomienda en desarrollo
+local.
+
+El código se comparte bajo licencia MIT. El despliegue está pensado para un
+solo usuario y depende de las cuotas gratuitas de Cloudflare.
+
 ## Arquitectura
 
 | Parte | Tecnología | Nombre en Cloudflare |
