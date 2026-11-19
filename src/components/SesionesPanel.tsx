@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { generarCodigoRecuperacion } from '../lib/auth'
 import { fullDate } from '../lib/format'
 import { cerrarSesionActiva, listarSesiones } from '../lib/sesiones'
 import type { SesionActiva, ToastTone } from '../lib/types'
+import { CodigoUnico } from './CodigoUnico'
 import { IconDevices, IconRefresh, IconX } from './Icons'
 
 interface SesionesPanelProps {
@@ -15,6 +17,8 @@ export function SesionesPanel({ onClose, onCerrarActual, notify }: SesionesPanel
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cerrando, setCerrando] = useState<string | null>(null)
+  const [codigo, setCodigo] = useState<string | null>(null)
+  const [generando, setGenerando] = useState(false)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -44,6 +48,21 @@ export function SesionesPanel({ onClose, onCerrarActual, notify }: SesionesPanel
       document.removeEventListener('keydown', alPulsar)
     }
   }, [onClose])
+
+  const generar = async () => {
+    setGenerando(true)
+    try {
+      setCodigo(await generarCodigoRecuperacion())
+      notify('Código de recuperación generado. Guárdalo ahora.')
+    } catch (err) {
+      notify(
+        err instanceof Error ? err.message : 'No se pudo generar el código.',
+        'error',
+      )
+    } finally {
+      setGenerando(false)
+    }
+  }
 
   const cerrar = async (sesion: SesionActiva) => {
     if (sesion.actual) {
@@ -175,6 +194,28 @@ export function SesionesPanel({ onClose, onCerrarActual, notify }: SesionesPanel
             </button>
           ) : null}
         </footer>
+
+        <section className="recuperacion-bloque" aria-labelledby="recuperacion-titulo">
+          <div>
+            <h3 id="recuperacion-titulo">Código de recuperación</h3>
+            <p>
+              Guárdalo para recuperar el acceso si olvidas tu contraseña. Caduca en 1 hora.
+              Generar otro invalida el anterior.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="button button-small button-quiet"
+            onClick={() => void generar()}
+            disabled={generando}
+          >
+            {generando ? (
+              <span className="spinner spinner-small spinner-inline" aria-hidden="true" />
+            ) : null}
+            {codigo ? 'Generar otro código' : 'Generar código'}
+          </button>
+          {codigo ? <CodigoUnico codigo={codigo} /> : null}
+        </section>
 
         <p className="panel-note">
           Cerrar una sesión no borra tus envíos. Si cierras la actual, tendrás que volver a

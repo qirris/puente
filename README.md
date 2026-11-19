@@ -42,11 +42,18 @@ También puedes revisar y cerrar tus sesiones activas desde el icono de
 dispositivos de la cabecera; cada una se identifica con un código público, nunca
 con el token de acceso.
 
+Para recuperar el acceso no hay correo: al crear la cuenta se muestra un código
+de un solo uso que conviene guardar en un gestor de contraseñas. También se puede
+generar uno nuevo desde el panel de sesiones mientras haya una sesión activa.
+Caduca en 1 hora, admite cinco intentos y cambiar la contraseña cierra todas las
+sesiones.
+
 ### Seguridad
 
 - Contraseñas con PBKDF2-SHA256 de 100 000 iteraciones y sal aleatoria.
 - Sesiones aleatorias de 32 bytes guardadas en D1, con caducidad de 30 días.
 - Bloqueo de 15 minutos tras 5 accesos fallidos por correo y dirección IP.
+- Códigos de recuperación guardados como hash PBKDF2; nunca se envían por correo.
 - CORS restringido al mismo origen y cabeceras de seguridad en todas las
   respuestas (`Referrer-Policy: no-referrer`, CSP, `X-Frame-Options`, `nosniff`).
 - El token de sesión viaja en la URL de las vistas previas de imagen. Es una
@@ -64,7 +71,7 @@ Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
-npm test            # 45 pruebas automáticas
+npm test            # 52 pruebas automáticas
 npm run build       # comprueba tipos y genera dist/
 ```
 

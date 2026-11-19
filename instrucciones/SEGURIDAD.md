@@ -26,6 +26,18 @@ navegador. Este documento describe qué se aplica y qué limitaciones se asumen.
   tampoco permite iniciar sesión: solo nombra la fila en la API.
 - La limpieza programada elimina también las sesiones caducadas.
 
+## Recuperación de contraseña
+
+- El código tiene 10 caracteres de un alfabeto sin `0`, `O`, `1` ni `I`, para
+  poder copiarlo a mano sin confusiones.
+- Solo se guarda su hash PBKDF2 en `codigos_recuperacion`; la API devuelve el
+  valor en claro únicamente al generarlo.
+- Caduca en 1 hora. Caducar o agotar los cinco intentos borra la fila.
+- Una cuenta inexistente y un código erróneo devuelven el mismo mensaje, para no
+  revelar qué correos tienen cuenta.
+- Acertar cambia la contraseña, borra el código y cierra todas las sesiones.
+- Generar un código nuevo invalida el anterior.
+
 ## Límite de intentos
 
 - 5 fallos permitidos por combinación de correo y dirección IP.

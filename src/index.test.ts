@@ -370,3 +370,190 @@ describe('sesiones activas', () => {
     expect(despues.n).toBe(0)
   })
 })
+
+describe('recuperación de contraseña', () => {
+  const Bearer = (token: string) => ({ Authorization: `Bearer ${token}` })
+  const REGEX_CODIGO = /^[A-HJ-NP-Z2-9]{10}$/
+  const EMAIL = 'ana@ejemplo.com'
+
+  it('entrega el código en el registro y guarda solo su hash', async () => {
+    const { base, json } = crearLlamadas()
+    const respuesta = await json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    expect(respuesta.status).toBe(201)
+    const datos = await respuesta.json()
+    expect(datos.codigoRecuperacion).toMatch(REGEX_CODIGO)
+
+    const id = (
+      base.prepare('select id from users where email = ?').get(EMAIL) as { id: string }
+    ).id
+    const fila = base.prepare(
+      'select hash, fallos from codigos_recuperacion where user_id = ?',
+    )
+      .get(id) as { hash: string; fallos: number }
+    expect(fila.hash).toContain('pbkdf2$100000$')
+    expect(fila.hash).not.toContain(datos.codigoRecuperacion)
+    expect(fila.fallos).toBe(0)
+  })
+
+  it('exige sesión para generar un código e invalida el anterior', async () => {
+    const { base, json, llamar } = crearLlamadas()
+    expect((await llamar('/api/recuperacion/codigo', { method: 'POST' })).status).toBe(401)
+
+    const registro = await json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    const { token, codigoRecuperacion: primero } = await registro.json()
+
+    const generada = await llamar('/api/recuperacion/codigo', {
+      method: 'POST',
+      headers: Bearer(token),
+    })
+    expect(generada.status).toBe(200)
+    const { codigo: segundo } = await generada.json()
+    expect(segundo).toMatch(REGEX_CODIGO)
+    expect(segundo).not.toBe(primero)
+
+    const id = (
+      base.prepare('select id from users where email = ?').get(EMAIL) as { id: string }
+    ).id
+    const total = base.prepare(
+      'select count(*) as n from codigos_recuperacion where user_id = ?',
+    )
+      .get(id) as { n: number }
+    expect(total.n).toBe(1)
+
+    const anterior = await json('/api/recuperacion/restablecer', 'POST', {
+      email: EMAIL,
+      codigo: primero,
+      password: 'nueva123',
+    })
+    expect(anterior.status).toBe(401)
+  })
+
+  it('cambia la contraseña, cierra las sesiones y gasta el código', async () => {
+    const { base, json } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    const { codigoRecuperacion } = await registro.json()
+
+    const respuesta = await json('/api/recuperacion/restablecer', 'POST', {
+      email: EMAIL,
+      codigo: codigoRecuperacion.toLowerCase(),
+      password: 'nueva123',
+    })
+    expect(respuesta.status).toBe(200)
+
+    const sesiones = base.prepare('select count(*) as n from sesiones')
+      .get() as { n: number }
+    const codigos = base.prepare('select count(*) as n from codigos_recuperacion')
+      .get() as { n: number }
+    expect(sesiones.n).toBe(0)
+    expect(codigos.n).toBe(0)
+
+    const antigua = await json('/api/acceso', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    expect(antigua.status).toBe(401)
+    const nueva = await json('/api/acceso', 'POST', {
+      email: EMAIL,
+      password: 'nueva123',
+    })
+    expect(nueva.status).toBe(200)
+  })
+
+  it('bloquea tras cinco códigos erróneos y borra el código', async () => {
+    const { base, json } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    const { codigoRecuperacion } = await registro.json()
+    const erroneo = codigoRecuperacion === 'AAAAAAAAAA' ? 'BBBBBBBBBB' : 'AAAAAAAAAA'
+
+    for (let intento = 0; intento < 4; intento += 1) {
+      const respuesta = await json('/api/recuperacion/restablecer', 'POST', {
+        email: EMAIL,
+        codigo: erroneo,
+        password: 'nueva123',
+      })
+      expect(respuesta.status).toBe(401)
+    }
+
+    const bloqueo = await json('/api/recuperacion/restablecer', 'POST', {
+      email: EMAIL,
+      codigo: erroneo,
+      password: 'nueva123',
+    })
+    expect(bloqueo.status).toBe(429)
+    expect((await bloqueo.json()).error).toContain('Demasiados intentos')
+
+    const restante = base.prepare('select count(*) as n from codigos_recuperacion')
+      .get() as { n: number }
+    expect(restante.n).toBe(0)
+  })
+
+  it('rechaza códigos caducados y no revela si la cuenta existe', async () => {
+    const { base, json } = crearLlamadas()
+    const registro = await json('/api/registro', 'POST', {
+      email: EMAIL,
+      password: '123456',
+    })
+    const { codigoRecuperacion } = await registro.json()
+    base.prepare('update codigos_recuperacion set expires_at = ?')
+      .run('2020-01-01T00:00:00.000Z')
+
+    const caducado = await json('/api/recuperacion/restablecer', 'POST', {
+      email: EMAIL,
+      codigo: codigoRecuperacion,
+      password: 'nueva123',
+    })
+    expect(caducado.status).toBe(401)
+    const mensaje = (await caducado.json()).error
+    expect(mensaje).toBe('Código de recuperación incorrecto o caducado.')
+
+    const inexistente = await json('/api/recuperacion/restablecer', 'POST', {
+      email: 'nadie@ejemplo.com',
+      codigo: codigoRecuperacion,
+      password: 'nueva123',
+    })
+    expect(inexistente.status).toBe(401)
+    expect((await inexistente.json()).error).toBe(mensaje)
+  })
+
+  it('valida el formato del código antes de buscar en la base', async () => {
+    const { json } = crearLlamadas()
+    await json('/api/registro', 'POST', { email: EMAIL, password: '123456' })
+
+    const respuesta = await json('/api/recuperacion/restablecer', 'POST', {
+      email: EMAIL,
+      codigo: '0000000000',
+      password: 'nueva123',
+    })
+    expect(respuesta.status).toBe(401)
+    expect((await respuesta.json()).error).toContain('Código de recuperación')
+  })
+
+  it('borra los códigos caducados en la limpieza programada', async () => {
+    const { base, env, json } = crearLlamadas()
+    await json('/api/registro', 'POST', { email: EMAIL, password: '123456' })
+    base.prepare('update codigos_recuperacion set expires_at = ?')
+      .run('2020-01-01T00:00:00.000Z')
+
+    await worker.scheduled(
+      { scheduledTime: Date.now() } as Parameters<typeof worker.scheduled>[0],
+      env,
+      contexto,
+    )
+
+    const restante = base.prepare('select count(*) as n from codigos_recuperacion')
+      .get() as { n: number }
+    expect(restante.n).toBe(0)
+  })
+})

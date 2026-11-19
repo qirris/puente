@@ -42,6 +42,11 @@ El panel de sesiones activas usa un identificador público de 16 bytes para
 listar y cerrar sesiones. Ese identificador no sirve para autenticarse: la API
 nunca devuelve tokens al consultar las sesiones.
 
+El restablecimiento usa un código aleatorio de 10 caracteres guardado como hash
+PBKDF2, válido durante 1 hora y con un máximo de cinco intentos. No se envía por
+correo: se muestra una sola vez al registrarse o al generarlo desde una sesión
+activa. Un restablecimiento correcto cierra todas las sesiones.
+
 La vista previa de imágenes incluye el token de sesión en la URL. Es una
 limitación conocida y asumida por decisión del proyecto: se mitiga con
 `Referrer-Policy: no-referrer`, `Cache-Control: no-store` y cabeceras de

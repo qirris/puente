@@ -31,7 +31,8 @@ Cloudflare Worker  puente-api
 | `lib/filtrado.ts` | Búsqueda y filtros de la bandeja, sin tocar la API. |
 | `components/InboxFilters.tsx` | Campo de búsqueda y chips de tipo. |
 | `lib/sesiones.ts` | Listado y cierre de sesiones activas. |
-| `components/SesionesPanel.tsx` | Panel para revisar y cerrar sesiones. |
+| `components/SesionesPanel.tsx` | Panel para revisar y cerrar sesiones y generar un código. |
+| `components/CodigoUnico.tsx` | Muestra el código de recuperación una sola vez. |
 | `lib/upload.ts` | Subida de archivos con barra de progreso. |
 | `lib/validation.ts` | Normalización de enlaces y validación de archivos. |
 | `lib/format.ts` | Tamaños, fechas relativas y etiquetas en español. |
@@ -46,6 +47,8 @@ Cloudflare Worker  puente-api
 | `/api/sesion` | GET | Devuelve el usuario de la sesión actual. |
 | `/api/sesiones` | GET | Lista las sesiones activas con su id público, sin tokens. |
 | `/api/sesiones/:id` | DELETE | Cierra una sesión propia por su id público. |
+| `/api/recuperacion/codigo` | POST | Genera un código de recuperación; exige sesión. |
+| `/api/recuperacion/restablecer` | POST | Cambia la contraseña con un código vigente; no exige sesión. |
 | `/api/envios` | GET / POST | Lista o crea envíos de texto y enlace. |
 | `/api/envios/:id` | PATCH / DELETE | Fija, desfija o borra un envío. |
 | `/api/archivos` | POST | Sube un archivo a KV y crea su registro en D1. |
@@ -66,10 +69,18 @@ bytes, la fecha de creación, la caducidad y si es la sesión actual; en ningún
 caso devuelve el token. La migración `0004_sesiones_public_id.sql` añadió esa
 columna y rellenó las sesiones ya abiertas.
 
-Todas las rutas excepto registro, acceso y `OPTIONS` exigen una sesión válida.
-El trabajador programado (`17 * * * *`) llama a la misma limpieza que
-`/api/limpieza`: borra archivos caducados, registros caducados, sesiones
-caducadas e intentos de acceso antiguos.
+## Recuperación de contraseña
+
+El registro entrega un código de 10 caracteres que `CodigoUnico` muestra una sola
+vez. `POST /api/recuperacion/codigo` genera otro desde una sesión activa e
+invalida el anterior. `POST /api/recuperacion/restablecer` compara el código con
+el hash PBKDF2 guardado, permite cinco intentos y, si acierta, cambia la
+contraseña y cierra todas las sesiones. No hay correo ni servicios de terceros.
+
+Todas las rutas excepto registro, acceso, restablecimiento y `OPTIONS` exigen una
+sesión válida. El trabajador programado (`17 * * * *`) llama a la misma limpieza
+que `/api/limpieza`: borra archivos caducados, registros caducados, sesiones
+caducadas, códigos caducados e intentos de acceso antiguos.
 
 ## Esquema de datos
 
@@ -79,6 +90,7 @@ Las migraciones están en `migrations/` y se aplican con Wrangler:
 - `0002_sesiones.sql`: tokens de sesión con expiración a 30 días.
 - `0003_intentos_acceso.sql`: fallos de acceso por clave `IP|correo`.
 - `0004_sesiones_public_id.sql`: identificador público de cada sesión.
+- `0005_codigos_recuperacion.sql`: hash del código, intentos y caducidad.
 
 `items` guarda metadatos y, para imágenes y archivos, la ruta del objeto en KV.
 Los bytes viven siempre en `puente-archivos`; D1 nunca guarda archivos.

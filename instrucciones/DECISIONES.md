@@ -55,6 +55,16 @@ La interfaz se sirve desde el mismo Worker, así que `Access-Control-Allow-Origi
 *` no aportaba nada y ampliaba la superficie de ataque. Se eliminó y se añadieron
 CSP, `X-Frame-Options`, `nosniff` y `Referrer-Policy` en todas las respuestas.
 
+## 19/11/2026 · Recuperación con código y sin correo
+
+El proyecto es personal y no quiere depender de un servicio de correo ni de un
+proveedor de identidad. Al registrarse se entrega un código de 10 caracteres que
+se muestra una sola vez, y se puede regenerar desde una sesión activa. En D1 solo
+se guarda su hash PBKDF2; caduca en 1 hora y admite cinco intentos. Un
+restablecimiento correcto cierra todas las sesiones. La limitación es conocida:
+quien pierde el código y no tiene ninguna sesión activa no puede recuperar el
+acceso de forma automática.
+
 ## 19/11/2026 · Identificador público para las sesiones
 
 Para listar y cerrar sesiones hacía falta nombrarlas sin enviar el token al

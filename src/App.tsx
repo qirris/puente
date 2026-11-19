@@ -10,6 +10,7 @@ import type { InboxItem, Sesion, ToastMessage, ToastTone } from './lib/types'
 import { useAuth } from './hooks/useAuth'
 import { useInbox } from './hooks/useInbox'
 import { AuthScreen } from './components/AuthScreen'
+import { CodigoUnico } from './components/CodigoUnico'
 import { Composer } from './components/Composer'
 import { EmptyState, InboxSkeleton, Lightbox, NoResults } from './components/EmptyState'
 import { Header } from './components/Header'
@@ -313,9 +314,37 @@ function Pantry({ session, signOut }: PantryProps) {
 
 export default function App() {
   const { session, loading, signOut } = useAuth()
+  const [codigoPendiente, setCodigoPendiente] = useState<string | null>(null)
 
   if (loading) return <Splash />
-  if (!session) return <AuthScreen />
+  if (!session) return <AuthScreen onCodigoGenerado={setCodigoPendiente} />
+
+  // El registro guarda la sesión y desmonta AuthScreen, así que el código se
+  // muestra aquí antes de entrar en la bandeja. Solo aparece una vez.
+  if (codigoPendiente) {
+    return (
+      <div className="codigo-pantalla">
+        <section className="codigo-pantalla-card">
+          <div className="auth-card-head">
+            <p className="eyebrow">Cuenta creada</p>
+            <h2>Guarda tu código de recuperación</h2>
+            <p>
+              Es la única vez que verás este código. Si lo pierdes, solo puedes generar
+              otro mientras tengas una sesión activa.
+            </p>
+          </div>
+          <CodigoUnico codigo={codigoPendiente} />
+          <button
+            type="button"
+            className="button button-primary auth-submit"
+            onClick={() => setCodigoPendiente(null)}
+          >
+            Ya lo he guardado, entrar en mi bandeja
+          </button>
+        </section>
+      </div>
+    )
+  }
 
   return <Pantry session={session} signOut={signOut} />
 }

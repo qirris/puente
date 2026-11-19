@@ -11,6 +11,9 @@ y [Semantic Versioning](https://semver.org/lang/es/).
   por tipo de envío. Todo se calcula en el navegador, sin cambios en la API.
 - Panel de sesiones activas para ver y cerrar dispositivos. Cada sesión se
   identifica con un código público: la API nunca devuelve tokens al listarlas.
+- Código de recuperación de contraseña de un solo uso: se muestra al crear la
+  cuenta o se genera desde una sesión activa, caduca en 1 hora y admite cinco
+  intentos. Un restablecimiento correcto cierra todas las sesiones.
 
 ### Cambiado
 

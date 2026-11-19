@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { iniciarSesion, registrar } from '../lib/auth'
+import { iniciarSesion, registrar, restablecerContrasena } from '../lib/auth'
 import {
   BridgeMark,
   IconAlert,
@@ -8,8 +8,13 @@ import {
   IconLock,
   IconMail,
 } from './Icons'
+import { CodigoUnico } from './CodigoUnico'
 
-type Mode = 'login' | 'signup'
+type Mode = 'login' | 'signup' | 'recover'
+
+interface AuthScreenProps {
+  onCodigoGenerado?: (codigo: string) => void
+}
 
 function translateAuthError(message: string): string {
   const raw = message.toLowerCase()
@@ -31,11 +36,14 @@ function translateAuthError(message: string): string {
   return message
 }
 
-export function AuthScreen() {
+export function AuthScreen({ onCodigoGenerado }: AuthScreenProps) {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [codigo, setCodigo] = useState('')
+  const [codigoRecuperacion, setCodigoRecuperacion] = useState('')
+  const [codigoGenerado, setCodigoGenerado] = useState<string | null>(null)
+  const [recuperacionHecha, setRecuperacionHecha] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +54,10 @@ export function AuthScreen() {
     setNotice(null)
     setPassword('')
     setShowPassword(false)
+    setCodigo('')
+    setCodigoRecuperacion('')
+    setCodigoGenerado(null)
+    setRecuperacionHecha(false)
   }, [mode])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -53,12 +65,20 @@ export function AuthScreen() {
     if (submitting) return
 
     const cleanEmail = email.trim()
-    if (!cleanEmail || !password) {
-      setError('Escribe tu email y tu contraseña.')
+    if (!cleanEmail) {
+      setError('Escribe tu email.')
+      return
+    }
+    if (!password) {
+      setError(mode === 'recover' ? 'Escribe la nueva contraseña.' : 'Escribe tu contraseña.')
       return
     }
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+    if (mode === 'recover' && !codigoRecuperacion.trim()) {
+      setError('Escribe tu código de recuperación.')
       return
     }
 
@@ -69,12 +89,25 @@ export function AuthScreen() {
     try {
       if (mode === 'login') {
         await iniciarSesion(cleanEmail, password)
-      } else {
-        await registrar(cleanEmail, password, codigo.trim())
+        setEmail('')
+      } else if (mode === 'signup') {
+        const resultado = await registrar(cleanEmail, password, codigo.trim())
+        // Avisar primero: guardar la sesión desmonta esta pantalla al entrar.
+        onCodigoGenerado?.(resultado.codigoRecuperacion)
+        setCodigoGenerado(resultado.codigoRecuperacion)
         setNotice('Cuenta creada. Ya estás dentro.')
+        setEmail('')
+        setCodigo('')
+      } else {
+        await restablecerContrasena(
+          cleanEmail,
+          codigoRecuperacion.trim().toUpperCase(),
+          password,
+        )
+        setPassword('')
+        setCodigoRecuperacion('')
+        setRecuperacionHecha(true)
       }
-      setEmail('')
-      setCodigo('')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'No se pudo completar la operación.'
       setError(translateAuthError(message))
@@ -145,130 +178,213 @@ export function AuthScreen() {
       <section className="auth-panel">
         <div className="auth-card">
           <div className="auth-card-head">
-            <p className="eyebrow">{mode === 'login' ? 'Bienvenido de nuevo' : 'Primera vez'}</p>
-            <h2>{mode === 'login' ? 'Entra en tu bandeja' : 'Crea tu cuenta'}</h2>
+            <p className="eyebrow">
+              {mode === 'login'
+                ? 'Bienvenido de nuevo'
+                : mode === 'signup'
+                  ? 'Primera vez'
+                  : 'Recuperar acceso'}
+            </p>
+            <h2>
+              {mode === 'login'
+                ? 'Entra en tu bandeja'
+                : mode === 'signup'
+                  ? 'Crea tu cuenta'
+                  : 'Elige una contraseña nueva'}
+            </h2>
             <p>
               {mode === 'login'
                 ? 'La misma cuenta en el móvil y en el ordenador.'
-                : 'Una cuenta, una bandeja privada en todos tus dispositivos.'}
+                : mode === 'signup'
+                  ? 'Una cuenta, una bandeja privada en todos tus dispositivos.'
+                  : 'Necesitas el código que guardaste al crear la cuenta o al generarlo desde una sesión activa.'}
             </p>
           </div>
 
-          <div className="auth-tabs" role="group" aria-label="Acceso o registro">
+          {mode === 'recover' ? (
             <button
               type="button"
-              className={mode === 'login' ? 'active' : ''}
+              className="link-button volver-acceso"
               onClick={() => setMode('login')}
-              aria-pressed={mode === 'login'}
             >
-              Entrar
+              ← Volver al acceso
             </button>
-            <button
-              type="button"
-              className={mode === 'signup' ? 'active' : ''}
-              onClick={() => setMode('signup')}
-              aria-pressed={mode === 'signup'}
-            >
-              Crear cuenta
-            </button>
-          </div>
+          ) : (
+            <div className="auth-tabs" role="group" aria-label="Acceso o registro">
+              <button
+                type="button"
+                className={mode === 'login' ? 'active' : ''}
+                onClick={() => setMode('login')}
+                aria-pressed={mode === 'login'}
+              >
+                Entrar
+              </button>
+              <button
+                type="button"
+                className={mode === 'signup' ? 'active' : ''}
+                onClick={() => setMode('signup')}
+                aria-pressed={mode === 'signup'}
+              >
+                Crear cuenta
+              </button>
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} noValidate>
-            <label className="field">
-              <span>Email</span>
-              <div className="input-shell">
-                <IconMail size={18} className="input-icon" />
-                <input
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  autoFocus
-                  required
-                />
-              </div>
-            </label>
-
-            <label className="field">
-              <span>Contraseña</span>
-              <div className="input-shell">
-                <IconLock size={18} className="input-icon" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  placeholder={mode === 'login' ? 'Tu contraseña' : 'Mínimo 6 caracteres'}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  minLength={6}
-                  required
-                />
-                <button
-                  type="button"
-                  className="input-action"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                </button>
-              </div>
-            </label>
-
-            {mode === 'signup' ? (
+          {mode === 'recover' && recuperacionHecha ? (
+            <div className="recuperacion-hecha">
+              <p className="form-message success" role="status">
+                Contraseña actualizada. Se han cerrado todas tus sesiones.
+              </p>
+              <button
+                type="button"
+                className="button button-primary auth-submit"
+                onClick={() => setMode('login')}
+              >
+                Entrar con mi nueva contraseña
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} noValidate>
               <label className="field">
-                <span>Código de invitación</span>
+                <span>Email</span>
                 <div className="input-shell">
-                  <IconLock size={18} className="input-icon" />
+                  <IconMail size={18} className="input-icon" />
                   <input
-                    type="text"
-                    name="codigo"
-                    autoComplete="off"
-                    placeholder="El código que te han dado"
-                    value={codigo}
-                    onChange={(event) => setCodigo(event.target.value)}
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    placeholder="tu@email.com"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    autoFocus
+                    required
                   />
                 </div>
               </label>
-            ) : null}
 
-            {error ? (
-              <p className="form-message error" role="alert">
-                <IconAlert size={17} />
-                {error}
-              </p>
-            ) : null}
+              {mode === 'recover' ? (
+                <label className="field">
+                  <span>Código de recuperación</span>
+                  <div className="input-shell">
+                    <IconLock size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      name="codigoRecuperacion"
+                      className="codigo-input"
+                      autoComplete="off"
+                      inputMode="text"
+                      maxLength={10}
+                      placeholder="Las 10 letras y números guardados"
+                      value={codigoRecuperacion}
+                      onChange={(event) => setCodigoRecuperacion(event.target.value.toUpperCase())}
+                      required
+                    />
+                  </div>
+                </label>
+              ) : null}
 
-            {notice ? (
-              <p className="form-message success" role="status">
-                {notice}
-              </p>
-            ) : null}
+              <label className="field">
+                <span>{mode === 'recover' ? 'Nueva contraseña' : 'Contraseña'}</span>
+                <div className="input-shell">
+                  <IconLock size={18} className="input-icon" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    placeholder={mode === 'login' ? 'Tu contraseña' : 'Mínimo 6 caracteres'}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="input-action"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                  </button>
+                </div>
+              </label>
 
-            <button type="submit" className="button button-primary auth-submit" disabled={submitting}>
-              {submitting ? <span className="spinner spinner-inline" aria-hidden="true" /> : null}
-              {submitting
-                ? mode === 'login'
-                  ? 'Entrando…'
-                  : 'Creando cuenta…'
-                : mode === 'login'
-                  ? 'Entrar'
-                  : 'Crear mi cuenta'}
-            </button>
-          </form>
+              {mode === 'signup' ? (
+                <label className="field">
+                  <span>Código de invitación</span>
+                  <div className="input-shell">
+                    <IconLock size={18} className="input-icon" />
+                    <input
+                      type="text"
+                      name="codigo"
+                      autoComplete="off"
+                      placeholder="El código que te han dado"
+                      value={codigo}
+                      onChange={(event) => setCodigo(event.target.value)}
+                    />
+                  </div>
+                </label>
+              ) : null}
 
-          <p className="auth-switch">
-            {mode === 'login' ? '¿Todavía no tienes cuenta?' : '¿Ya tienes una cuenta?'}{' '}
-            <button
-              type="button"
-              className="link-button"
-              onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-            >
-              {mode === 'login' ? 'Créala ahora' : 'Entra aquí'}
-            </button>
-          </p>
+              {error ? (
+                <p className="form-message error" role="alert">
+                  <IconAlert size={17} />
+                  {error}
+                </p>
+              ) : null}
+
+              {notice ? (
+                <p className="form-message success" role="status">
+                  {notice}
+                </p>
+              ) : null}
+
+              {codigoGenerado ? (
+                <CodigoUnico
+                  codigo={codigoGenerado}
+                  titulo="Guarda tu código de recuperación"
+                />
+              ) : null}
+
+              <button type="submit" className="button button-primary auth-submit" disabled={submitting}>
+                {submitting ? <span className="spinner spinner-inline" aria-hidden="true" /> : null}
+                {submitting
+                  ? mode === 'login'
+                    ? 'Entrando…'
+                    : mode === 'signup'
+                      ? 'Creando cuenta…'
+                      : 'Actualizando…'
+                  : mode === 'login'
+                    ? 'Entrar'
+                    : mode === 'signup'
+                      ? 'Crear mi cuenta'
+                      : 'Cambiar contraseña'}
+              </button>
+            </form>
+          )}
+
+          {mode === 'login' ? (
+            <p className="auth-switch">
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => setMode('recover')}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </p>
+          ) : mode === 'signup' ? (
+            <p className="auth-switch">
+              ¿Ya tienes una cuenta?{' '}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => setMode('login')}
+              >
+                Entra aquí
+              </button>
+            </p>
+          ) : null}
         </div>
       </section>
     </div>

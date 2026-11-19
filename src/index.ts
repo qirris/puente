@@ -78,6 +78,14 @@ interface UsuarioSesion {
   publicId: string
 }
 
+interface CodigoRecuperacion {
+  user_id: string
+  hash: string
+  fallos: number
+  creado_at: string
+  expires_at: string
+}
+
 const LIMITE_ARCHIVO = 20 * 1024 * 1024
 const MAX_TEXTO = 10_000
 // Cloudflare Workers limita PBKDF2 a 100000 iteraciones como máximo.
@@ -85,6 +93,12 @@ const ITERACIONES = 100_000
 const HORAS = 24 * 60 * 60 * 1000
 const INTENTOS_MAXIMOS = 5
 const VENTANA_INTENTOS = 15 * 60 * 1000
+// El código de recuperación vive una hora y admite cinco intentos.
+const RECUPERACION_MS = 60 * 60 * 1000
+const RECUPERACION_MAX_FALLOS = 5
+// Sin 0, O, 1, I, l ni otros caracteres fáciles de confundir al copiar a mano.
+const ALFABETO_CODIGO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const LONGITUD_CODIGO = 10
 
 // La interfaz se sirve desde el mismo origen, así que no hace falta CORS abierto.
 const CABECERAS_COMUNES: Record<string, string> = {
@@ -259,6 +273,35 @@ async function crearSesion(env: Env, userId: string): Promise<string> {
   return token
 }
 
+function nuevoCodigoRecuperacion(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(LONGITUD_CODIGO))
+  let codigo = ''
+  for (const byte of bytes) codigo += ALFABETO_CODIGO[byte % ALFABETO_CODIGO.length]
+  return codigo
+}
+
+/** Guarda el hash del código y devuelve el valor en claro una sola vez. */
+async function guardarCodigoRecuperacion(
+  env: Env,
+  userId: string,
+): Promise<string> {
+  const codigo = nuevoCodigoRecuperacion()
+  const hash = await hashContrasena(codigo)
+  const expira = new Date(Date.now() + RECUPERACION_MS).toISOString()
+  await env.PUENTE_DB.prepare(
+    `insert into codigos_recuperacion (user_id, hash, fallos, creado_at, expires_at)
+     values (?, ?, 0, ?, ?)
+     on conflict(user_id) do update set
+       hash = excluded.hash,
+       fallos = 0,
+       creado_at = excluded.creado_at,
+       expires_at = excluded.expires_at`,
+  )
+    .bind(userId, hash, ahora(), expira)
+    .run()
+  return codigo
+}
+
 function tokenDe(request: Request): string | null {
   const autorizacion = request.headers.get('Authorization') ?? ''
   if (autorizacion.startsWith('Bearer ')) {
@@ -336,6 +379,10 @@ async function limpiarCaducados(env: Env): Promise<number> {
     .run()
 
   await env.PUENTE_DB.prepare('delete from sesiones where expires_at < ?')
+    .bind(corte)
+    .run()
+
+  await env.PUENTE_DB.prepare('delete from codigos_recuperacion where expires_at < ?')
     .bind(corte)
     .run()
 
@@ -417,7 +464,8 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
       .run()
 
     const token = await crearSesion(env, id)
-    return json({ token, user: { id, email } }, 201)
+    const codigoRecuperacion = await guardarCodigoRecuperacion(env, id)
+    return json({ token, user: { id, email }, codigoRecuperacion }, 201)
   }
 
   // Inicio de sesión, con límite de intentos por correo y dirección IP.
@@ -457,6 +505,78 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     return json({ ok: true })
   }
 
+  // Restablecimiento: no exige sesión, pero sí un código vigente y sin agotar.
+  if (ruta === '/api/recuperacion/restablecer' && metodo === 'POST') {
+    const datos = await cuerpo(request)
+    const email = String(datos.email ?? '').trim().toLowerCase()
+    const codigo = String(datos.codigo ?? '').trim().toUpperCase()
+    const password = String(datos.password ?? '')
+    const errorCodigo = 'Código de recuperación incorrecto o caducado.'
+    const errorIntentos =
+      'Demasiados intentos. Genera un código nuevo desde una sesión activa.'
+    const expirar = async (userId: string) => {
+      await env.PUENTE_DB.prepare('delete from codigos_recuperacion where user_id = ?')
+        .bind(userId)
+        .run()
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return fallo('Escribe un email válido.', 400)
+    }
+    if (password.length < 6) {
+      return fallo('La contraseña debe tener al menos 6 caracteres.', 400)
+    }
+    if (!new RegExp(`^[${ALFABETO_CODIGO}]{${LONGITUD_CODIGO}}$`).test(codigo)) {
+      return fallo(errorCodigo, 401)
+    }
+
+    const cuenta = await env.PUENTE_DB.prepare('select id, email from users where email = ?')
+      .bind(email)
+      .first<Cuenta>()
+    if (!cuenta) return fallo(errorCodigo, 401)
+
+    const fila = await env.PUENTE_DB.prepare(
+      'select user_id, hash, fallos, expires_at from codigos_recuperacion where user_id = ?',
+    )
+      .bind(cuenta.id)
+      .first<CodigoRecuperacion>()
+    if (!fila) return fallo(errorCodigo, 401)
+
+    if (fila.expires_at < ahora()) {
+      await expirar(cuenta.id)
+      return fallo(errorCodigo, 401)
+    }
+    if (fila.fallos >= RECUPERACION_MAX_FALLOS) {
+      await expirar(cuenta.id)
+      return fallo(errorIntentos, 429)
+    }
+    if (!(await contrasenaValida(codigo, fila.hash))) {
+      const fallos = fila.fallos + 1
+      if (fallos >= RECUPERACION_MAX_FALLOS) {
+        await expirar(cuenta.id)
+        return fallo(errorIntentos, 429)
+      }
+      await env.PUENTE_DB.prepare(
+        'update codigos_recuperacion set fallos = ? where user_id = ?',
+      )
+        .bind(fallos, cuenta.id)
+        .run()
+      return fallo(errorCodigo, 401)
+    }
+
+    const hash = await hashContrasena(password)
+    await env.PUENTE_DB.prepare('update users set password_hash = ? where id = ?')
+      .bind(hash, cuenta.id)
+      .run()
+    await expirar(cuenta.id)
+    // Cambiar la contraseña cierra todas las sesiones: ningún dispositivo
+    // antiguo conserva acceso con la credencial anterior.
+    await env.PUENTE_DB.prepare('delete from sesiones where user_id = ?')
+      .bind(cuenta.id)
+      .run()
+    return json({ ok: true })
+  }
+
   const usuario = await usuarioDe(request, env)
   if (!usuario) {
     return fallo('Tu sesión ha caducado. Vuelve a iniciar sesión.', 401)
@@ -464,6 +584,12 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
 
   if (ruta === '/api/sesion' && metodo === 'GET') {
     return json({ user: { id: usuario.id, email: usuario.email } })
+  }
+
+  // Solo una sesión válida puede generar un código de recuperación.
+  if (ruta === '/api/recuperacion/codigo' && metodo === 'POST') {
+    const codigo = await guardarCodigoRecuperacion(env, usuario.id)
+    return json({ codigo })
   }
 
   // Sesiones activas: se identifican por un id público, nunca por el token.

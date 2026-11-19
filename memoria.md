@@ -32,11 +32,12 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/filtrado.ts`: búsqueda y filtros de la bandeja solo en el cliente.
   - `src/components/InboxFilters.tsx`: campo de búsqueda y chips de tipo.
   - `src/lib/sesiones.ts`: listado y cierre de sesiones activas.
-  - `src/components/SesionesPanel.tsx`: panel para revisar y cerrar sesiones.
+  - `src/components/SesionesPanel.tsx`: panel para revisar y cerrar sesiones y generar un código.
+  - `src/components/CodigoUnico.tsx`: muestra el código de recuperación una sola vez.
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
-  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`: esquema D1.
+  - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 45 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 52 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -65,6 +66,10 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   Todo / Enlaces / Notas / Fotos / Archivos; todo se calcula en el navegador.
 - Panel de sesiones activas: permite ver los dispositivos con acceso y cerrar
   los que no se reconozcan, identificados por un código público y nunca por el token.
+- Recuperación de contraseña sin correo: código de 10 caracteres mostrado una sola
+  vez al registrarse o generado desde una sesión activa; válido 1 hora, con 5
+  intentos y guardado solo como hash PBKDF2. Un acierto cambia la contraseña y
+  cierra todas las sesiones.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -90,6 +95,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: fuentes locales: WOFF2 de Fraunces (normal e itálica) y Manrope guardados en `public/fuentes/` con sus licencias OFL; eliminados los `<link>` a Google Fonts, declarados los `@font-face` en `src/styles.css` y simplificada la CSP a `font-src 'self'`.
 - 19/11/2026: búsqueda y filtros en la bandeja: función pura `filtrarEnvios` con 8 pruebas, componente `InboxFilters`, estado «sin resultados» y estilos responsive; sin cambios en la API ni en D1.
 - 19/11/2026: sesiones activas: migración `0004_sesiones_public_id.sql` aplicada en local y remoto, rutas `GET /api/sesiones` y `DELETE /api/sesiones/:id`, 5 pruebas nuevas, panel `SesionesPanel` y botón en la cabecera; desplegado y verificado en remoto.
+- 19/11/2026: recuperación de contraseña: migración `0005_codigos_recuperacion.sql` aplicada en local y remoto, rutas `POST /api/recuperacion/codigo` y `POST /api/recuperacion/restablecer`, componente `CodigoUnico`, modo `recover` en `AuthScreen`, botón de generación en `SesionesPanel` y 7 pruebas nuevas; desplegado y verificado en remoto.
+- 19/11/2026: corregido el flujo del registro: `guardarSesion()` desmontaba `AuthScreen` antes de mostrar el código, así que `App` muestra ahora una pantalla de confirmación con el código hasta que el usuario confirma que lo ha guardado. Nuevos estilos `.codigo-pantalla`.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -107,6 +114,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Las fuentes se alojan en el propio proyecto: evitan dependencias de terceros y permiten una CSP más estricta sin dominios de Google.
 - La búsqueda y los filtros de la bandeja se resuelven en el cliente: la lista ya está en memoria y no merece índices nuevos ni rutas adicionales.
 - Cada sesión tiene un `public_id` aleatorio de 16 bytes: permite listarla y cerrarla sin enviar el token al navegador. No es un secreto, pero tampoco autentica.
+- Recuperación sin correo ni servicios de terceros: el código se muestra una sola vez y solo se guarda su hash PBKDF2. Conviene guardarlo en un gestor de contraseñas; quien lo pierde y no tiene sesión activa no puede recuperar el acceso automáticamente.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -125,6 +133,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
 - 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
 - 19/11/2026: con las sesiones activas, `npm run build` (52 módulos) y `npm test` (45 pruebas, 4 archivos) correctos; migración 0004 aplicada en local y remoto; desplegada la versión `fcceef93-2bb7-4851-a34a-693fd888d3b2`. En remoto: `GET`/`DELETE /api/sesiones` sin token devuelven 401; el JS publicado contiene «Sesiones activas», «Cerrar las demás», «Este dispositivo» y «Ver sesiones activas»; el CSS sirve `.sesion-fila.actual`.
+- 19/11/2026: con la recuperación, `npm run build` (53 módulos) y `npm test` (52 pruebas, 4 archivos) correctos; migración 0005 aplicada en local y remoto. Primer despliegue `be81db5e-671f-4566-a17f-28cbb6ad13ba`; tras corregir el flujo del registro, despliegue final `ba8412a6-089d-410a-ad00-ebedf38c330e`. En remoto: `POST /api/recuperacion/codigo` sin sesión devuelve 401 y `POST /api/recuperacion/restablecer` con cuenta inexistente devuelve 401 con el mismo mensaje que un código erróneo; el JS publicado contiene «¿Olvidaste tu contraseña?», «Código de recuperación», «Guarda tu código de recuperación», «Ya lo he guardado, entrar en mi bandeja» y «Cambiar contraseña»; el CSS sirve `.codigo-pantalla`, `.codigo-valor` y `.recuperacion-bloque`.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -135,6 +144,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Al inspeccionar la D1 remota se encontró la cuenta real del usuario (creada a las 14:57). No se borró. La consulta mostró su token de sesión en la salida, así que se invalidó esa sesión por precaución; el usuario debe volver a iniciar sesión.
 - El aviso privado de vulnerabilidades de GitHub no se pudo activar con el token disponible; `SECURITY.md` contempla el contacto privado alternativo.
 - KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en aparecer en otra ubicación.
+- Resuelto: en el registro, `guardarSesion()` desmontaba `AuthScreen` y el código de recuperación nunca se veía. Ahora `App` retiene el código y muestra una pantalla de confirmación antes de entrar en la bandeja.
 
 ## 10. Próximos pasos
 - [x] Desplegar `puente-api` y anotar la URL pública.
@@ -150,7 +160,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Alojar las fuentes localmente y quitar Google Fonts de la CSP.
 - [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [x] Listar y cerrar sesiones activas.
-- [ ] Código de recuperación de contraseña mostrado una sola vez.
+- [x] Código de recuperación de contraseña mostrado una sola vez.
 - [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [ ] Publicar v1.1.0 con las mejoras anteriores.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
@@ -163,3 +173,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: primera mejora posterior a v1.0.0: fuentes Fraunces y Manrope alojadas en el proyecto, sin peticiones a Google y con CSP simplificada.
 - 19/11/2026: segunda mejora: búsqueda y filtros por tipo en la bandeja, resueltos en el cliente y con 8 pruebas nuevas.
 - 19/11/2026: tercera mejora: panel de sesiones activas con identificador público, rutas propias y limpieza de sesiones caducadas.
+- 19/11/2026: cuarta mejora: recuperación de contraseña con código de un solo uso, hash PBKDF2, cinco intentos y cierre de todas las sesiones al acertar.
