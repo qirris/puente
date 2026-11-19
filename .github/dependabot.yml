@@ -11,6 +11,11 @@ updates:
     versioning-strategy: increase
     commit-message:
       prefix: "configuración"
+    # Los saltos de versión mayor se revisan a mano: pueden romper las
+    # dependencias entre Vite, Vitest y el plugin de React.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -20,3 +25,6 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "configuración"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
