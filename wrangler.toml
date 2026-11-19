@@ -17,7 +17,19 @@ id = "f00415679cbd4c8e9fbf3dcba07d2240"
 [assets]
 directory = "./dist"
 binding = "PUENTE_STATIC"
+# El Worker debe ver también las peticiones de archivos estáticos para poder
+# añadir las cabeceras de seguridad a la interfaz y al service worker.
+run_worker_first = true
 
 # Limpieza de envíos caducados, una vez por hora.
 [triggers]
 crons = ["17 * * * *"]
+
+# Registros de ejecución para detectar errores del Worker.
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true

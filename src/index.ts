@@ -81,12 +81,29 @@ const MAX_TEXTO = 10_000
 // Cloudflare Workers limita PBKDF2 a 100000 iteraciones como máximo.
 const ITERACIONES = 100_000
 const HORAS = 24 * 60 * 60 * 1000
+const INTENTOS_MAXIMOS = 5
+const VENTANA_INTENTOS = 15 * 60 * 1000
 
-const CORS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-puente-nombre',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+// La interfaz se sirve desde el mismo origen, así que no hace falta CORS abierto.
+const CABECERAS_COMUNES: Record<string, string> = {
+  'Cache-Control': 'no-store',
+  'Referrer-Policy': 'no-referrer',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
 }
+
+const POLITICA_SEGURIDAD = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self'",
+  "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' blob: data:",
+  "connect-src 'self'",
+].join('; ')
 
 function ahora(): string {
   return new Date().toISOString()
@@ -95,7 +112,24 @@ function ahora(): string {
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8' },
+    headers: { ...CABECERAS_COMUNES, 'Content-Type': 'application/json; charset=utf-8' },
+  })
+}
+
+/** Añade cabeceras de seguridad a la interfaz y al service worker. */
+function conCabecerasSeguras(respuesta: Response): Response {
+  const cabeceras = new Headers(respuesta.headers)
+  const tipo = cabeceras.get('Content-Type') ?? ''
+  if (tipo.includes('text/html') || tipo.includes('javascript')) {
+    cabeceras.set('Content-Security-Policy', POLITICA_SEGURIDAD)
+    cabeceras.set('Referrer-Policy', 'no-referrer')
+    cabeceras.set('X-Content-Type-Options', 'nosniff')
+    cabeceras.set('X-Frame-Options', 'DENY')
+  }
+  return new Response(respuesta.body, {
+    status: respuesta.status,
+    statusText: respuesta.statusText,
+    headers: cabeceras,
   })
 }
 
@@ -155,6 +189,61 @@ function nuevoToken(): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
+}
+
+function ipDe(request: Request): string {
+  return (
+    request.headers.get('cf-connecting-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'local'
+  )
+}
+
+function claveIntento(request: Request, email: string): string {
+  return `${ipDe(request)}|${email}`
+}
+
+interface IntentoAcceso {
+  fallos: number
+  ultima_at: string
+}
+
+async function consultarIntento(
+  env: Env,
+  clave: string,
+): Promise<IntentoAcceso | null> {
+  return env.PUENTE_DB.prepare(
+    'select fallos, ultima_at from intentos_acceso where clave = ?',
+  )
+    .bind(clave)
+    .first<IntentoAcceso>()
+}
+
+function dentroDeLaVentana(intento: IntentoAcceso): boolean {
+  return Date.now() - new Date(intento.ultima_at).getTime() <= VENTANA_INTENTOS
+}
+
+async function registrarFallo(env: Env, clave: string): Promise<number> {
+  const intento = await consultarIntento(env, clave)
+  const fallos = !intento || !dentroDeLaVentana(intento) ? 1 : intento.fallos + 1
+  const instante = ahora()
+  await env.PUENTE_DB.prepare(
+    `insert into intentos_acceso (clave, fallos, primera_at, ultima_at)
+     values (?, ?, ?, ?)
+     on conflict(clave) do update set
+       fallos = excluded.fallos,
+       primera_at = excluded.primera_at,
+       ultima_at = excluded.ultima_at`,
+  )
+    .bind(clave, fallos, instante, instante)
+    .run()
+  return fallos
+}
+
+async function borrarIntento(env: Env, clave: string): Promise<void> {
+  await env.PUENTE_DB.prepare('delete from intentos_acceso where clave = ?')
+    .bind(clave)
+    .run()
 }
 
 async function crearSesion(env: Env, userId: string): Promise<string> {
@@ -234,6 +323,10 @@ async function limpiarCaducados(env: Env): Promise<number> {
   const corte = ahora()
   let eliminados = 0
 
+  await env.PUENTE_DB.prepare('delete from intentos_acceso where ultima_at < ?')
+    .bind(new Date(Date.now() - VENTANA_INTENTOS).toISOString())
+    .run()
+
   for (let ronda = 0; ronda < 10; ronda += 1) {
     const filas = await env.PUENTE_DB.prepare(
       `select id, storage_path from items
@@ -275,7 +368,9 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
   const ruta = url.pathname
   const metodo = request.method
 
-  if (metodo === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
+  if (metodo === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CABECERAS_COMUNES })
+  }
 
   // Registro de cuenta.
   if (ruta === '/api/registro' && metodo === 'POST') {
@@ -313,20 +408,28 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     return json({ token, user: { id, email } }, 201)
   }
 
-  // Inicio de sesión.
+  // Inicio de sesión, con límite de intentos por correo y dirección IP.
   if (ruta === '/api/acceso' && metodo === 'POST') {
     const datos = await cuerpo(request)
     const email = String(datos.email ?? '').trim().toLowerCase()
     const password = String(datos.password ?? '')
+    const clave = claveIntento(request, email)
+    const intento = await consultarIntento(env, clave)
+    if (intento && dentroDeLaVentana(intento) && intento.fallos >= INTENTOS_MAXIMOS) {
+      return fallo('Demasiados intentos fallidos. Espera 15 minutos.', 429)
+    }
+
     const cuenta = await env.PUENTE_DB.prepare(
       'select id, email, password_hash from users where email = ?',
     )
       .bind(email)
       .first<Cuenta>()
     if (!cuenta || !(await contrasenaValida(password, cuenta.password_hash))) {
+      await registrarFallo(env, clave)
       return fallo('Email o contraseña incorrectos.', 401)
     }
 
+    await borrarIntento(env, clave)
     const token = await crearSesion(env, cuenta.id)
     return json({ token, user: { id: cuenta.id, email: cuenta.email } })
   }
@@ -523,7 +626,7 @@ async function manejarApi(request: Request, env: Env): Promise<Response> {
     const descargar = url.searchParams.get('descarga') === '1'
     const nombre = (fila.file_name ?? 'archivo').replace(/["\r\n]/g, '')
     const cabeceras = new Headers({
-      ...CORS,
+      ...CABECERAS_COMUNES,
       'Content-Type': fila.mime_type ?? 'application/octet-stream',
       'Content-Disposition': `${descargar ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(nombre)}`,
       'Cache-Control': 'private, max-age=3600',
@@ -553,7 +656,10 @@ export default {
         return fallo(mensaje, 500)
       }
     }
-    if (env.PUENTE_STATIC) return env.PUENTE_STATIC.fetch(request)
+    if (env.PUENTE_STATIC) {
+      const respuesta = await env.PUENTE_STATIC.fetch(request)
+      return conCabecerasSeguras(respuesta)
+    }
     return fallo('Interfaz no disponible.', 404)
   },
 
