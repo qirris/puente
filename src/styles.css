@@ -666,7 +666,8 @@ a {
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 14.5px;
+  /* 16 px evita que Safari amplíe la página al enfocar el campo en iOS. */
+  font-size: 16px;
 }
 
 .input-shell input::placeholder {
@@ -1341,7 +1342,8 @@ a {
   outline: 0;
   background: transparent;
   color: var(--ink);
-  font-size: 12.5px;
+  /* 16 px evita que Safari amplíe la página al enfocar el campo en iOS. */
+  font-size: 16px;
 }
 
 .search-field input::placeholder {

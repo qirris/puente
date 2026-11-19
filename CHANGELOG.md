@@ -3,6 +3,13 @@
 Este archivo sigue las convenciones de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y [Semantic Versioning](https://semver.org/lang/es/).
 
+## [No publicado]
+
+### Corregido
+
+- Los campos de correo, contraseña y búsqueda usan 16 px para evitar que Safari
+  en iOS amplíe la página sola al enfocarlos.
+
 ## [1.1.0] - 2026-11-19
 
 ### Añadido

@@ -100,3 +100,12 @@ dependemos de un tercero para mostrar la interfaz y la CSP queda en
 GitHub Actions comprueba tipos y pruebas, pero no despliega. El despliegue se
 ejecuta a mano para revisar antes de publicar y para no depender de un secreto
 de Cloudflare en GitHub.
+
+## 20/11/2026 · Corregir el auto-zoom de iOS sin bloquear el zoom
+
+Safari amplía la página al enfocar campos de texto con menos de 16 px. Los de
+correo, contraseña y búsqueda tenían 14,5 y 12,5 px, así que se subieron a 16 px.
+Se descartó `user-scalable=no` y `maximum-scale=1`: iOS los ignora y quitan a
+quien lo necesita la opción de ampliar. Tampoco se añadió un interruptor en el
+panel de sesiones, porque ese panel gestiona dispositivos y no preferencias de
+pantalla. El zoom que Safari ya había guardado se quita en el propio móvil.

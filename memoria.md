@@ -103,6 +103,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: corregido el flujo del registro: `guardarSesion()` desmontaba `AuthScreen` antes de mostrar el código, así que `App` muestra ahora una pantalla de confirmación con el código hasta que el usuario confirma que lo ha guardado. Nuevos estilos `.codigo-pantalla`.
 - 19/11/2026: caducidad configurable: migración `0006_duracion_envios.sql` aplicada en local y remoto, valores 1/24/168 validados en el Worker, selector en `Composer`, cabecera `x-puente-duracion` en la subida y 4 pruebas nuevas; desplegado y verificado en remoto.
 - 19/11/2026: limpieza documental final: `SECURITY.md` marca la 1.1.x como versión con soporte, `instrucciones/SEGURIDAD.md` describe la caducidad elegible y `memoria.md` actualiza el alcance; commit `4aad8e1`. Sin cambios de código ni redespliegue.
+- 20/11/2026: corregido el auto-zoom de Safari en iOS: `.input-shell input` y `.search-field input` pasan de 14,5 y 12,5 px a 16 px. Se descartó bloquear el zoom manual y añadir un interruptor en sesiones; desplegada la versión `772d439f-8275-4ce7-997f-ba78d7420708`.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -145,6 +146,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: con las sesiones activas, `npm run build` (52 módulos) y `npm test` (45 pruebas, 4 archivos) correctos; migración 0004 aplicada en local y remoto; desplegada la versión `fcceef93-2bb7-4851-a34a-693fd888d3b2`. En remoto: `GET`/`DELETE /api/sesiones` sin token devuelven 401; el JS publicado contiene «Sesiones activas», «Cerrar las demás», «Este dispositivo» y «Ver sesiones activas»; el CSS sirve `.sesion-fila.actual`.
 - 19/11/2026: con la recuperación, `npm run build` (53 módulos) y `npm test` (52 pruebas, 4 archivos) correctos; migración 0005 aplicada en local y remoto. Primer despliegue `be81db5e-671f-4566-a17f-28cbb6ad13ba`; tras corregir el flujo del registro, despliegue final `ba8412a6-089d-410a-ad00-ebedf38c330e`. En remoto: `POST /api/recuperacion/codigo` sin sesión devuelve 401 y `POST /api/recuperacion/restablecer` con cuenta inexistente devuelve 401 con el mismo mensaje que un código erróneo; el JS publicado contiene «¿Olvidaste tu contraseña?», «Código de recuperación», «Guarda tu código de recuperación», «Ya lo he guardado, entrar en mi bandeja» y «Cambiar contraseña»; el CSS sirve `.codigo-pantalla`, `.codigo-valor` y `.recuperacion-bloque`.
 - 19/11/2026: CI en verde para el commit `4aad8e1` (check «Tipos, build y pruebas»). Los ajustes fueron solo de documentación; no se repitieron build, pruebas ni despliegue.
+- 20/11/2026: con los campos a 16 px, `npm run build` (53 módulos) y `npm test` (56 pruebas, 4 archivos) correctos; desplegada la versión `772d439f-8275-4ce7-997f-ba78d7420708`. En remoto: la página principal devuelve 200, el HTML sirve `/assets/index-CPw96IDd.css` y ese CSS contiene `font-size:16px` en `.input-shell input` y `.search-field input`.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -175,6 +177,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Código de recuperación de contraseña mostrado una sola vez.
 - [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [x] Publicar v1.1.0 con las mejoras anteriores.
+- [x] Evitar el auto-zoom de Safari en iOS subiendo los campos de texto a 16 px.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
@@ -188,3 +191,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: cuarta mejora: recuperación de contraseña con código de un solo uso, hash PBKDF2, cinco intentos y cierre de todas las sesiones al acertar.
 - 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar. Cierre de las cinco mejoras con publicación de v1.1.0.
 - 19/11/2026: limpieza documental final de la v1.1.0: tabla de versiones con soporte, texto de caducidad y memoria del proyecto actualizados; CI en verde.
+- 20/11/2026: corrección del auto-zoom en iOS: campos de texto a 16 px, opción de bloquear el zoom manual descartada y despliegue verificado en remoto.
