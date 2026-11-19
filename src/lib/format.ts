@@ -8,8 +8,9 @@ export function formatBytes(bytes: number | null | undefined): string {
     value /= 1024
     unit += 1
   }
-  const decimals = value >= 10 || unit === 0 ? 0 : 1
-  return `${value.toFixed(decimals).replace('.', ',')} ${units[unit]}`
+  const decimals = value >= 10 ? 0 : 1
+  const numero = Number(value.toFixed(decimals)).toString().replace('.', ',')
+  return `${numero} ${units[unit]}`
 }
 
 export function relativeTime(iso: string, now = Date.now()): string {
