@@ -49,6 +49,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - URLs de archivo con el token en la query para que funcionen en `<img>` y `<a>`.
 - Limpieza de caducados: cron del Worker y ruta manual `/api/limpieza`.
 - Interfaz responsive (móvil y escritorio).
+- Instalable como aplicación (PWA): manifiesto, iconos PNG y service worker que guarda solo la interfaz, nunca la API.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -66,6 +67,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: creado el repositorio privado `qirris/puente` en GitHub con descripción y topics ligados al proyecto.
 - 19/11/2026: preparada la publicación segura: licencia MIT, sección "Ámbito del proyecto" en el README, campo "Código de invitación" en el registro y validación en el Worker mediante el secreto `PUENTE_CODIGO_INVITACION`.
 - 19/11/2026: compilación y despliegue correctos; registro sin código rechazado (403) y registro con código aceptado (201); cuenta de prueba eliminada después.
+- 19/11/2026: añadida instalación como aplicación: `public/manifest.webmanifest`, iconos PNG de 180/192/512 px y `public/sw.js` registrado desde `src/main.tsx`. El service worker guarda solo la interfaz y excluye `/api/`. README ampliado con las instrucciones de instalación en Windows y móvil.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -85,6 +87,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: API en la URL pública: registro (201), acceso (200), envío de texto (201), listado (200), subida (201), descarga del archivo (200 con el contenido correcto) y página principal (200).
 - 19/11/2026: tras la limpieza de código, `npm run build` correcto (48 módulos), redespliegue correcto y comprobación en la URL pública: página principal (200) y `/api/sesion` sin token (401, respuesta esperada).
 - 19/11/2026: con el código de invitación activo, `npm run build` y despliegue correctos; `/api/registro` sin código devuelve 403 con "El código de invitación no es correcto." y con código devuelve 201. Cuenta de prueba eliminada de la D1 remota.
+- 19/11/2026: con la PWA añadida, `npm run build` correcto; el manifiesto, los iconos y el service worker se sirven desde la URL pública con estado 200 y tipos correctos.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -99,9 +102,10 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Añadir README con las instrucciones de arranque local, la motivación y el aviso de IA.
 - [x] Crear el repositorio `qirris/puente`, fijar las normas en español y subir el código.
 - [x] Publicar el repositorio con licencia MIT, aviso de proyecto personal y registro protegido con código de invitación.
+- [x] Permitir instalar Puente como aplicación en escritorio y móvil.
 - [ ] El usuario crea su cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
 - 16/11/2026: inicialización del proyecto y sistema de memoria (fase Supabase).
 - 18/11/2026: traslado a `Documents\NEGOCIOS` y cambio de rumbo a Cloudflare.
-- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub y publicación segura con licencia MIT, ámbito personal y registro protegido.
+- 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub, publicación segura con licencia MIT, ámbito personal y registro protegido, e instalación como aplicación.

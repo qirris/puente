@@ -23,6 +23,8 @@
 - [x] Proteger el registro con código de invitación guardado como secreto en Cloudflare.
 - [x] Probar el registro con y sin código (403/201) y dejar la D1 remota limpia.
 - [x] Publicar el repositorio `qirris/puente` en GitHub.
+- [x] Añadir manifiesto PWA, iconos PNG y service worker para instalar Puente como aplicación.
+- [x] Documentar la instalación en Windows y en el móvil.
 
 ## Prueba final del usuario
 - [ ] Crear la cuenta real desde https://puente-api.qirris.workers.dev con el código de invitación y probar envío entre móvil y ordenador.

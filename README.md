@@ -63,6 +63,24 @@ El Worker sirve automáticamente el contenido de `dist/` y la API en `/api/*`.
 La limpieza de envíos caducados corre cada hora mediante el cron `17 * * * *`.
 La versión desplegada está en https://puente-api.qirris.workers.dev.
 
+## Instalar Puente como aplicación
+
+Puente se puede instalar para abrirla en su propia ventana, sin la barra del
+navegador y con un icono propio, tanto en el ordenador como en el móvil.
+
+**En Windows:** abre la URL en Edge y elige *⋯ → Aplicaciones → Instalar este
+sitio como aplicación*. En Chrome, elige *⋯ → Guardar y compartir → Crear
+acceso directo* y marca «Abrir como ventana». Después puedes anclar Puente a la
+barra de tareas o arrastrar el acceso directo al escritorio.
+
+**En el móvil:** abre la URL en Chrome (Android) o en Safari (iPhone) y pulsa
+*Instalar aplicación* o *Añadir a la pantalla de inicio*, según el navegador.
+
+La instalación guarda solo la interfaz. Los envíos y los archivos siguen
+viniendo de Cloudflare, así que hace falta conexión para usar la bandeja. Si el
+botón de instalar no aparece, comprueba que estás en HTTPS y que la página se ha
+recargado una vez después del despliegue.
+
 ## Comprobación rápida de la API
 
 ```bash
@@ -78,6 +96,9 @@ para el resto de la API.
 
 - `src/index.ts` — API del Worker y limpieza programada.
 - `src/lib/` — cliente HTTP, sesión, bandeja y subida con progreso.
+- `public/manifest.webmanifest` — datos de instalación como aplicación.
+- `public/sw.js` — caché mínima de la interfaz; nunca guarda la API.
+- `public/icon-*.png` — iconos para el escritorio y el móvil.
 - `migrations/` — esquema de D1.
 - `supabase/` — migraciones antiguas, conservadas solo como referencia histórica.
 - `wrangler.toml` — configuración de Cloudflare.
