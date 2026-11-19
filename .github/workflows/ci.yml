@@ -1,0 +1,35 @@
+# Puente · comprobaciones automáticas en cada cambio.
+# El despliegue se hace a mano con `npm run deploy`.
+
+name: Comprobaciones
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    name: Tipos, build y pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Comprobar tipos y generar la interfaz
+        run: npm run build
+
+      - name: Ejecutar pruebas
+        run: npm test

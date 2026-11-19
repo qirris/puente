@@ -4,6 +4,18 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Puente: tu bandeja privada entre el móvil y el ordenador.",
+  "license": "MIT",
+  "homepage": "https://puente-api.qirris.workers.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qirris/puente.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qirris/puente/issues"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -15,11 +27,11 @@
     "deploy": "npx wrangler deploy"
   },
   "dependencies": {
-    "@types/node": "^24.19.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
