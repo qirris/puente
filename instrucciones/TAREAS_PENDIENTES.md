@@ -39,6 +39,7 @@
 - [x] Añadir integración continua y Dependabot.
 - [x] Verificar cabeceras, CORS, 429, registro y acceso en la URL pública.
 - [x] Publicar tag y release `v1.0.0` y ajustar la configuración de GitHub.
+- [x] Limitar Dependabot a actualizaciones menores y añadir una captura al README.
 
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.

@@ -105,6 +105,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: en remoto, la interfaz y `/sw.js` sirven CSP, `Referrer-Policy`, `nosniff` y `X-Frame-Options`; `/api/sesion` sin token devuelve 401 sin cabeceras CORS; `OPTIONS` devuelve 204 sin `Access-Control-Allow-Origin`.
 - 19/11/2026: en remoto, 5 accesos fallidos devuelven 401 y el sexto 429 con el mensaje previsto; la tabla de intentos se limpió justo después.
 - 19/11/2026: en remoto, registro sin código devuelve 403, con código 201, acceso correcto 200, sesión con token en URL 200 y limpieza manual 200; la cuenta temporal se borró de D1.
+- 19/11/2026: CI de GitHub en verde en `master`. Configurados homepage, Dependabot, secret scanning con push protection, protección de `master`, tag `v1.0.0` y release `v1.0.0`.
+- 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
