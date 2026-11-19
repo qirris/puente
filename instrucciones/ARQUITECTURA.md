@@ -28,6 +28,8 @@ Cloudflare Worker  puente-api
 | `lib/api.ts` | Cliente HTTP con el token de sesión. |
 | `lib/auth.ts` y `lib/sesion.ts` | Persistencia local de la sesión. |
 | `lib/inbox.ts` | Tipos y acceso a los envíos. |
+| `lib/filtrado.ts` | Búsqueda y filtros de la bandeja, sin tocar la API. |
+| `components/InboxFilters.tsx` | Campo de búsqueda y chips de tipo. |
 | `lib/upload.ts` | Subida de archivos con barra de progreso. |
 | `lib/validation.ts` | Normalización de enlaces y validación de archivos. |
 | `lib/format.ts` | Tamaños, fechas relativas y etiquetas en español. |
@@ -45,6 +47,12 @@ Cloudflare Worker  puente-api
 | `/api/archivos` | POST | Sube un archivo a KV y crea su registro en D1. |
 | `/api/archivos/:id` | GET | Sirve el archivo o su vista previa. |
 | `/api/limpieza` | POST | Ejecuta la limpieza manualmente. |
+
+## Bandeja
+
+`hooks/useInbox.ts` mantiene la lista de envíos y `lib/filtrado.ts` aplica la
+búsqueda y los filtros solo en el navegador. No hay rutas ni consultas nuevas:
+la lista llega de `/api/envios` y se filtra en memoria.
 
 Todas las rutas excepto registro, acceso y `OPTIONS` exigen una sesión válida.
 El trabajador programado (`17 * * * *`) llama a la misma limpieza que

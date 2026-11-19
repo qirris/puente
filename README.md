@@ -36,6 +36,9 @@ aleatorios también en D1. El único secreto de la aplicación es el código de
 invitación, que se configura en Cloudflare como `PUENTE_CODIGO_INVITACION` y
 nunca se versiona.
 
+La bandeja admite búsqueda por texto, nombre de archivo o tipo MIME y filtros
+por tipo de envío. El filtrado se hace en el navegador, sin peticiones extra.
+
 ### Seguridad
 
 - Contraseñas con PBKDF2-SHA256 de 100 000 iteraciones y sal aleatoria.
@@ -58,7 +61,7 @@ Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
-npm test            # 32 pruebas automáticas
+npm test            # 40 pruebas automáticas
 npm run build       # comprueba tipos y genera dist/
 ```
 

@@ -29,10 +29,12 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/api.ts`: cliente HTTP con token Bearer.
   - `src/lib/auth.ts`, `src/lib/sesion.ts`: autenticación y sesión persistente.
   - `src/lib/inbox.ts`: operaciones de la bandeja (sondeo cada 10 s en lugar de Realtime).
+  - `src/lib/filtrado.ts`: búsqueda y filtros de la bandeja solo en el cliente.
+  - `src/components/InboxFilters.tsx`: campo de búsqueda y chips de tipo.
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
   - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 32 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 40 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -57,6 +59,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Interfaz responsive (móvil y escritorio).
 - Instalable como aplicación (PWA): manifiesto, iconos PNG y service worker que guarda solo la interfaz, nunca la API.
 - Fuentes locales: la interfaz carga los WOFF2 desde `/fuentes/` sin peticiones a terceros.
+- Bandeja con búsqueda por contenido, nombre de archivo y tipo MIME, y filtros
+  Todo / Enlaces / Notas / Fotos / Archivos; todo se calcula en el navegador.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -80,6 +84,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: documentación ampliada con `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `instrucciones/ARQUITECTURA.md`, `SEGURIDAD.md`, `PRUEBAS.md`, `DECISIONES.md` y `docs/OPERACIONES.md`. `supabase/` movido a `docs/historial/supabase/` con una nota de por qué se conserva.
 - 19/11/2026: `@types/node` movido a `devDependencies`, añadidos metadatos del paquete, `engines`, `.nvmrc`, CI y Dependabot.
 - 19/11/2026: fuentes locales: WOFF2 de Fraunces (normal e itálica) y Manrope guardados en `public/fuentes/` con sus licencias OFL; eliminados los `<link>` a Google Fonts, declarados los `@font-face` en `src/styles.css` y simplificada la CSP a `font-src 'self'`.
+- 19/11/2026: búsqueda y filtros en la bandeja: función pura `filtrarEnvios` con 8 pruebas, componente `InboxFilters`, estado «sin resultados» y estilos responsive; sin cambios en la API ni en D1.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -95,6 +100,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - CORS restringido al mismo origen: la interfaz se sirve desde el propio Worker, así que no se necesita `Access-Control-Allow-Origin: *`.
 - `run_worker_first = true` en los recursos estáticos para que el Worker pueda añadir cabeceras de seguridad a la interfaz.
 - Las fuentes se alojan en el propio proyecto: evitan dependencias de terceros y permiten una CSP más estricta sin dominios de Google.
+- La búsqueda y los filtros de la bandeja se resuelven en el cliente: la lista ya está en memoria y no merece índices nuevos ni rutas adicionales.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -111,6 +117,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: CI de GitHub en verde en `master`. Configurados homepage, Dependabot, secret scanning con push protection, protección de `master`, tag `v1.0.0` y release `v1.0.0`.
 - 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
 - 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
+- 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -134,7 +141,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Añadir CI, dependencias y documentación de operaciones.
 - [x] Añadir tag y release v1.0.0 y ajustar la configuración de GitHub.
 - [x] Alojar las fuentes localmente y quitar Google Fonts de la CSP.
-- [ ] Añadir búsqueda y filtros por tipo en la bandeja.
+- [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [ ] Listar y cerrar sesiones activas.
 - [ ] Código de recuperación de contraseña mostrado una sola vez.
 - [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
@@ -147,3 +154,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: migración completa del backend, cambio a KV, corrección de PBKDF2, despliegue, verificación en remoto, limpieza de restos de Supabase, documentación de la motivación y del aviso de IA, normas de commits en español, repositorio en GitHub, publicación segura con licencia MIT, ámbito personal y registro protegido, e instalación como aplicación.
 - 19/11/2026: revisión profesional integral: pruebas automáticas, seguridad reforzada sin cookies, documentación completa, integración continua, observabilidad y cierre de GitHub con versión 1.0.0.
 - 19/11/2026: primera mejora posterior a v1.0.0: fuentes Fraunces y Manrope alojadas en el proyecto, sin peticiones a Google y con CSP simplificada.
+- 19/11/2026: segunda mejora: búsqueda y filtros por tipo en la bandeja, resueltos en el cliente y con 8 pruebas nuevas.

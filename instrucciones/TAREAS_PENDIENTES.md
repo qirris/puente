@@ -43,7 +43,7 @@
 
 ## Mejoras posteriores a v1.0.0
 - [x] Alojar Fraunces y Manrope en `public/fuentes/` y quitar Google Fonts de la CSP.
-- [ ] Añadir búsqueda y filtros por tipo en la bandeja.
+- [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [ ] Listar y cerrar sesiones activas.
 - [ ] Código de recuperación de contraseña mostrado una sola vez.
 - [ ] Selector de caducidad (1 h, 24 h y 7 días) al enviar.

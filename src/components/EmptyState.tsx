@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { IconArrowUp, IconDownload, IconX } from './Icons'
+import { IconArrowUp, IconDownload, IconSearch, IconX } from './Icons'
 
 export function EmptyState() {
   return (
@@ -28,6 +28,26 @@ export function EmptyState() {
       <span className="empty-hint">
         <IconArrowUp size={15} /> Tu primer envío aparecerá aquí
       </span>
+    </div>
+  )
+}
+
+interface NoResultsProps {
+  onLimpiar: () => void
+}
+
+export function NoResults({ onLimpiar }: NoResultsProps) {
+  return (
+    <div className="empty-state no-results">
+      <IconSearch size={34} className="no-results-icon" />
+      <h3>Nada por aquí</h3>
+      <p>
+        No hay envíos que coincidan con la búsqueda o el filtro. Prueba con otra palabra o
+        vuelve a ver toda la bandeja.
+      </p>
+      <button type="button" className="button button-quiet" onClick={onLimpiar}>
+        Ver todos los envíos
+      </button>
     </div>
   )
 }

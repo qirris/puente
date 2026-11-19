@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   deleteItem,
   downloadItem,
   setPinned,
   subscribeToInbox,
 } from './lib/inbox'
+import { filtrarEnvios, type FiltroTipo } from './lib/filtrado'
 import type { InboxItem, Sesion, ToastMessage, ToastTone } from './lib/types'
 import { useAuth } from './hooks/useAuth'
 import { useInbox } from './hooks/useInbox'
 import { AuthScreen } from './components/AuthScreen'
 import { Composer } from './components/Composer'
-import { EmptyState, InboxSkeleton, Lightbox } from './components/EmptyState'
+import { EmptyState, InboxSkeleton, Lightbox, NoResults } from './components/EmptyState'
 import { Header } from './components/Header'
+import { InboxFilters } from './components/InboxFilters'
 import { Splash } from './components/Splash'
 import { ToastViewport } from './components/ToastViewport'
 import { IconAlert, IconLock, IconRefresh, IconWifiOff } from './components/Icons'
@@ -40,6 +42,8 @@ function Pantry({ session, signOut }: PantryProps) {
   const [preview, setPreview] = useState<InboxItem | null>(null)
   const [downloadingPreview, setDownloadingPreview] = useState(false)
   const [online, setOnline] = useState(() => navigator.onLine)
+  const [busqueda, setBusqueda] = useState('')
+  const [tipoFiltro, setTipoFiltro] = useState<FiltroTipo>('todos')
   const toastTimers = useRef<number[]>([])
   const toastId = useRef(0)
 
@@ -124,6 +128,16 @@ function Pantry({ session, signOut }: PantryProps) {
       unsubscribe?.()
     }
   }, [refreshSilent])
+
+  const visibles = useMemo(
+    () => filtrarEnvios(items, { texto: busqueda, tipo: tipoFiltro }),
+    [items, busqueda, tipoFiltro],
+  )
+
+  const limpiarFiltros = useCallback(() => {
+    setBusqueda('')
+    setTipoFiltro('todos')
+  }, [])
 
   const handleSent = useCallback(
     (item: InboxItem) => {
@@ -211,10 +225,19 @@ function Pantry({ session, signOut }: PantryProps) {
                 Lo más reciente primero. Todo caduca a las 24 h salvo que lo fijes.
               </p>
             </div>
-            <span className="count-pill" aria-label={`${items.length} envíos`}>
-              {loading ? '—' : items.length}
+            <span className="count-pill" aria-label={`${visibles.length} envíos visibles`}>
+              {loading ? '—' : visibles.length}
             </span>
           </div>
+
+          <InboxFilters
+            texto={busqueda}
+            tipo={tipoFiltro}
+            total={items.length}
+            visibles={visibles.length}
+            onTexto={setBusqueda}
+            onTipo={setTipoFiltro}
+          />
 
           {error ? (
             <div className="error-banner" role="alert">
@@ -234,9 +257,11 @@ function Pantry({ session, signOut }: PantryProps) {
             <InboxSkeleton />
           ) : items.length === 0 ? (
             <EmptyState />
+          ) : visibles.length === 0 ? (
+            <NoResults onLimpiar={limpiarFiltros} />
           ) : (
             <div className="inbox-list">
-              {items.map((item) => (
+              {visibles.map((item) => (
                 <ItemCard
                   key={item.id}
                   item={item}

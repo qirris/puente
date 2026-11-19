@@ -55,6 +55,12 @@ La interfaz se sirve desde el mismo Worker, así que `Access-Control-Allow-Origi
 *` no aportaba nada y ampliaba la superficie de ataque. Se eliminó y se añadieron
 CSP, `X-Frame-Options`, `nosniff` y `Referrer-Policy` en todas las respuestas.
 
+## 19/11/2026 · Búsqueda y filtros solo en el cliente
+
+La bandeja cabe en memoria y no justificaba índices nuevos en D1. Buscar y filtrar
+en el navegador evita tocar la API o el esquema y mantiene la respuesta inmediata.
+La lógica vive en `src/lib/filtrado.ts` y tiene pruebas propias.
+
 ## 19/11/2026 · Fuentes alojadas en el proyecto
 
 La interfaz pedía Fraunces y Manrope a Google Fonts. Se guardaron los WOFF2, con

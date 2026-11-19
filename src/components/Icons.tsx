@@ -140,6 +140,15 @@ export function IconTrash(props: IconProps) {
   )
 }
 
+export function IconSearch(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.6-3.6" />
+    </Icon>
+  )
+}
+
 export function IconRefresh(props: IconProps) {
   return (
     <Icon {...props}>

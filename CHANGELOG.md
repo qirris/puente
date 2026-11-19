@@ -5,6 +5,11 @@ y [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [No publicado]
 
+### Añadido
+
+- Búsqueda en la bandeja por texto, nombre de archivo o tipo MIME, con filtros
+  por tipo de envío. Todo se calcula en el navegador, sin cambios en la API.
+
 ### Cambiado
 
 - Fraunces y Manrope se sirven desde `public/fuentes/`; la interfaz ya no pide
