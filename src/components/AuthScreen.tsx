@@ -129,7 +129,7 @@ export function AuthScreen() {
         </ul>
 
         <p className="auth-footnote">
-          Bucket privado · Sesión persistente · Sin claves privadas en el navegador
+          Almacenamiento privado · Sesión persistente · Sin claves privadas en el navegador
         </p>
 
         <svg className="auth-arches" viewBox="0 0 420 220" aria-hidden="true">

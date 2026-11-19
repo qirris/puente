@@ -5,5 +5,4 @@ const url = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
 
 export const config = {
   apiUrl: url,
-  isConfigured: true,
 } as const

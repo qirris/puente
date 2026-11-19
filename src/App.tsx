@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { config } from './lib/config'
 import {
   deleteItem,
   downloadItem,
@@ -13,7 +12,6 @@ import { AuthScreen } from './components/AuthScreen'
 import { Composer } from './components/Composer'
 import { EmptyState, InboxSkeleton, Lightbox } from './components/EmptyState'
 import { Header } from './components/Header'
-import { ConfigScreen } from './components/ConfigScreen'
 import { Splash } from './components/Splash'
 import { ToastViewport } from './components/ToastViewport'
 import { IconAlert, IconLock, IconRefresh, IconWifiOff } from './components/Icons'
@@ -198,7 +196,7 @@ function Pantry({ session, signOut }: PantryProps) {
           <div className="private-note">
             <IconLock size={15} />
             <span>
-              Solo tu cuenta ve esta bandeja. Los archivos viven en un bucket privado y se
+              Solo tu cuenta ve esta bandeja. Los archivos viven en un espacio privado y se
               borran con el registro.
             </span>
           </div>
@@ -278,7 +276,6 @@ function Pantry({ session, signOut }: PantryProps) {
 export default function App() {
   const { session, loading, signOut } = useAuth()
 
-  if (!config.isConfigured) return <ConfigScreen />
   if (loading) return <Splash />
   if (!session) return <AuthScreen />
 

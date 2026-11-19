@@ -1,5 +1,5 @@
 // Puente · API en Cloudflare Workers
-// Sustituye al backend de Supabase: D1 guarda los envíos, R2 los archivos y
+// Sustituye al backend de Supabase: D1 guarda los envíos, KV los archivos y
 // las sesiones se gestionan aquí. Sin secretos que configurar a mano.
 
 interface D1Result<T> {
