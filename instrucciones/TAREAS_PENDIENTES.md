@@ -48,6 +48,7 @@
 - [x] Código de recuperación mostrado una sola vez, regenerable desde una sesión activa.
 - [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [x] Publicar la versión v1.1.0 con las cinco mejoras.
+- [x] Ajustar las referencias documentales de la v1.1.0 (soporte y caducidad).
 
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.

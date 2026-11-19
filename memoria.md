@@ -102,6 +102,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: recuperación de contraseña: migración `0005_codigos_recuperacion.sql` aplicada en local y remoto, rutas `POST /api/recuperacion/codigo` y `POST /api/recuperacion/restablecer`, componente `CodigoUnico`, modo `recover` en `AuthScreen`, botón de generación en `SesionesPanel` y 7 pruebas nuevas; desplegado y verificado en remoto.
 - 19/11/2026: corregido el flujo del registro: `guardarSesion()` desmontaba `AuthScreen` antes de mostrar el código, así que `App` muestra ahora una pantalla de confirmación con el código hasta que el usuario confirma que lo ha guardado. Nuevos estilos `.codigo-pantalla`.
 - 19/11/2026: caducidad configurable: migración `0006_duracion_envios.sql` aplicada en local y remoto, valores 1/24/168 validados en el Worker, selector en `Composer`, cabecera `x-puente-duracion` en la subida y 4 pruebas nuevas; desplegado y verificado en remoto.
+- 19/11/2026: limpieza documental final: `SECURITY.md` marca la 1.1.x como versión con soporte, `instrucciones/SEGURIDAD.md` describe la caducidad elegible y `memoria.md` actualiza el alcance; commit `4aad8e1`. Sin cambios de código ni redespliegue.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -143,6 +144,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
 - 19/11/2026: con las sesiones activas, `npm run build` (52 módulos) y `npm test` (45 pruebas, 4 archivos) correctos; migración 0004 aplicada en local y remoto; desplegada la versión `fcceef93-2bb7-4851-a34a-693fd888d3b2`. En remoto: `GET`/`DELETE /api/sesiones` sin token devuelven 401; el JS publicado contiene «Sesiones activas», «Cerrar las demás», «Este dispositivo» y «Ver sesiones activas»; el CSS sirve `.sesion-fila.actual`.
 - 19/11/2026: con la recuperación, `npm run build` (53 módulos) y `npm test` (52 pruebas, 4 archivos) correctos; migración 0005 aplicada en local y remoto. Primer despliegue `be81db5e-671f-4566-a17f-28cbb6ad13ba`; tras corregir el flujo del registro, despliegue final `ba8412a6-089d-410a-ad00-ebedf38c330e`. En remoto: `POST /api/recuperacion/codigo` sin sesión devuelve 401 y `POST /api/recuperacion/restablecer` con cuenta inexistente devuelve 401 con el mismo mensaje que un código erróneo; el JS publicado contiene «¿Olvidaste tu contraseña?», «Código de recuperación», «Guarda tu código de recuperación», «Ya lo he guardado, entrar en mi bandeja» y «Cambiar contraseña»; el CSS sirve `.codigo-pantalla`, `.codigo-valor` y `.recuperacion-bloque`.
+- 19/11/2026: CI en verde para el commit `4aad8e1` (check «Tipos, build y pruebas»). Los ajustes fueron solo de documentación; no se repitieron build, pruebas ni despliegue.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -185,3 +187,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: tercera mejora: panel de sesiones activas con identificador público, rutas propias y limpieza de sesiones caducadas.
 - 19/11/2026: cuarta mejora: recuperación de contraseña con código de un solo uso, hash PBKDF2, cinco intentos y cierre de todas las sesiones al acertar.
 - 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar. Cierre de las cinco mejoras con publicación de v1.1.0.
+- 19/11/2026: limpieza documental final de la v1.1.0: tabla de versiones con soporte, texto de caducidad y memoria del proyecto actualizados; CI en verde.
