@@ -11,6 +11,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - URL pública: https://puente-api.qirris.workers.dev
 - Repositorio: https://github.com/qirris/puente (público desde el 19/11/2026, previa aprobación del usuario).
 - El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
+- Versión actual: v1.1.0, con tag y release publicados el 19/11/2026.
 - Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
 - El usuario ya creó su cuenta real el 19/11/2026 a las 14:57; los datos de prueba creados durante la revisión se eliminaron.
@@ -136,6 +137,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: CI de GitHub en verde en `master`. Configurados homepage, Dependabot, secret scanning con push protection, protección de `master`, tag `v1.0.0` y release `v1.0.0`.
 - 19/11/2026: CI en verde para el commit `6fe5767` (check «Tipos, build y pruebas»).
 - 19/11/2026: con la caducidad configurable, `npm run build` (53 módulos) y `npm test` (56 pruebas, 4 archivos) correctos; migración 0006 aplicada en local y remoto; desplegada la versión `38a86cd1-87f4-40d2-a3ea-a892759137cc`. En remoto: `POST /api/envios` sin sesión devuelve 401; el JS publicado contiene «Caducidad», «1 hora», «24 horas», «7 días», «Caduca en» y `x-puente-duracion`; el CSS sirve `.duracion-campo`, `.duracion-opciones` y `.duracion-opcion`.
+- 19/11/2026: CI en verde para el commit `6236a19` (check «Tipos, build y pruebas»). Tag y release `v1.1.0` publicados en https://github.com/qirris/puente/releases/tag/v1.1.0.
 - 19/11/2026: Dependabot propuso saltos de versión mayores incompatibles; se limitó a actualizaciones menores y se cerraron esos 7 pull requests. Añadida una captura real de la pantalla de acceso al README.
 - 19/11/2026: con las fuentes locales, `npm run build` y `npm test` (32 pruebas) correctos; desplegado y verificado en remoto: los tres WOFF2 devuelven 200 con `font/woff2`, el CSS sirve las rutas `/fuentes/` y la CSP ya no contiene dominios de Google.
 - 19/11/2026: con la búsqueda y los filtros, `npm run build` y `npm test` (40 pruebas, 4 archivos) correctos; desplegado y verificado en remoto: el JS publicado tiene el mismo tamaño que el local (265 880 bytes) y contiene los textos nuevos, y el CSS sirve los estilos de búsqueda y filtros.
@@ -170,7 +172,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Listar y cerrar sesiones activas.
 - [x] Código de recuperación de contraseña mostrado una sola vez.
 - [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
-- [ ] Publicar v1.1.0 con las mejoras anteriores.
+- [x] Publicar v1.1.0 con las mejoras anteriores.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
@@ -182,4 +184,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: segunda mejora: búsqueda y filtros por tipo en la bandeja, resueltos en el cliente y con 8 pruebas nuevas.
 - 19/11/2026: tercera mejora: panel de sesiones activas con identificador público, rutas propias y limpieza de sesiones caducadas.
 - 19/11/2026: cuarta mejora: recuperación de contraseña con código de un solo uso, hash PBKDF2, cinco intentos y cierre de todas las sesiones al acertar.
-- 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar.
+- 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar. Cierre de las cinco mejoras con publicación de v1.1.0.
