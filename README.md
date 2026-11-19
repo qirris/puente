@@ -2,6 +2,8 @@
 
 Tu bandeja privada para enviar enlaces, notas, fotos y archivos entre el móvil y el ordenador.
 
+![Pantalla de acceso de Puente](docs/captura.jpg)
+
 ## ¿Por qué hice Puente?
 
 Lo hice para mí, porque lo necesitaba. Siempre me encontraba con el mismo problema: tener que subir archivos a un servicio u otro para pasarlos del móvil al ordenador y volver, y eso se me hacía incómodo y poco privado. Quería una bandeja sencilla, mía, donde dejar enlaces, notas, fotos y archivos y olvidarme del resto.
