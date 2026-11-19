@@ -1,7 +1,7 @@
 {
   "name": "puente",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "Puente: tu bandeja privada entre el móvil y el ordenador.",
   "license": "MIT",

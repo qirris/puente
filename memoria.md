@@ -11,7 +11,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - URL pública: https://puente-api.qirris.workers.dev
 - Repositorio: https://github.com/qirris/puente (público desde el 19/11/2026, previa aprobación del usuario).
 - El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
-- Versión actual: v1.1.0, con tag y release publicados el 19/11/2026.
+- Versión actual: v1.1.1, con tag y release publicados el 20/11/2026.
 - Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
 - El usuario ya creó su cuenta real el 19/11/2026 a las 14:57; los datos de prueba creados durante la revisión se eliminaron.
@@ -104,6 +104,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: caducidad configurable: migración `0006_duracion_envios.sql` aplicada en local y remoto, valores 1/24/168 validados en el Worker, selector en `Composer`, cabecera `x-puente-duracion` en la subida y 4 pruebas nuevas; desplegado y verificado en remoto.
 - 19/11/2026: limpieza documental final: `SECURITY.md` marca la 1.1.x como versión con soporte, `instrucciones/SEGURIDAD.md` describe la caducidad elegible y `memoria.md` actualiza el alcance; commit `4aad8e1`. Sin cambios de código ni redespliegue.
 - 20/11/2026: corregido el auto-zoom de Safari en iOS: `.input-shell input` y `.search-field input` pasan de 14,5 y 12,5 px a 16 px. Se descartó bloquear el zoom manual y añadir un interruptor en sesiones; desplegada la versión `772d439f-8275-4ce7-997f-ba78d7420708`.
+- 20/11/2026: publicada la v1.1.1 con esa corrección; `package.json` sincronizado a 1.1.1, README ampliado con la actualización de la PWA y `master` protegida con `enforce_admins` para que el check obligatorio no se pueda saltar.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -123,6 +124,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Cada sesión tiene un `public_id` aleatorio de 16 bytes: permite listarla y cerrarla sin enviar el token al navegador. No es un secreto, pero tampoco autentica.
 - Recuperación sin correo ni servicios de terceros: el código se muestra una sola vez y solo se guarda su hash PBKDF2. Conviene guardarlo en un gestor de contraseñas; quien lo pierde y no tiene sesión activa no puede recuperar el acceso automáticamente.
 - La caducidad se elige por envío entre 1 hora, 24 horas y 7 días. 24 horas sigue siendo el valor por defecto; el Worker valida el plazo y calcula la fecha, y guarda el plazo para recuperarlo al desfijar.
+- Los saltos mayores de dependencias se revisan a mano: Vite, Vitest y el plugin de React deben actualizarse juntos y un salto puede romper la compilación. Dependabot sigue trayendo solo las versiones menores.
 
 ## 8. Pruebas verificadas
 - 19/11/2026: `npm run build` correcto.
@@ -147,6 +149,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: con la recuperación, `npm run build` (53 módulos) y `npm test` (52 pruebas, 4 archivos) correctos; migración 0005 aplicada en local y remoto. Primer despliegue `be81db5e-671f-4566-a17f-28cbb6ad13ba`; tras corregir el flujo del registro, despliegue final `ba8412a6-089d-410a-ad00-ebedf38c330e`. En remoto: `POST /api/recuperacion/codigo` sin sesión devuelve 401 y `POST /api/recuperacion/restablecer` con cuenta inexistente devuelve 401 con el mismo mensaje que un código erróneo; el JS publicado contiene «¿Olvidaste tu contraseña?», «Código de recuperación», «Guarda tu código de recuperación», «Ya lo he guardado, entrar en mi bandeja» y «Cambiar contraseña»; el CSS sirve `.codigo-pantalla`, `.codigo-valor` y `.recuperacion-bloque`.
 - 19/11/2026: CI en verde para el commit `4aad8e1` (check «Tipos, build y pruebas»). Los ajustes fueron solo de documentación; no se repitieron build, pruebas ni despliegue.
 - 20/11/2026: con los campos a 16 px, `npm run build` (53 módulos) y `npm test` (56 pruebas, 4 archivos) correctos; desplegada la versión `772d439f-8275-4ce7-997f-ba78d7420708`. En remoto: la página principal devuelve 200, el HTML sirve `/assets/index-CPw96IDd.css` y ese CSS contiene `font-size:16px` en `.input-shell input` y `.search-field input`.
+- 20/11/2026: `npm run build` y `npm test` repetidos al sincronizar la versión a 1.1.1; tag y release `v1.1.1` publicados y check «Tipos, build y pruebas» en verde. Protección de `master` verificada con `enforce_admins` activo.
 
 ## 9. Errores y problemas pendientes
 - R2 no se pudo crear: `Please enable R2 through the Cloudflare Dashboard. [code: 10042]`. No es bloqueante: se sustituyó por Workers KV.
@@ -178,6 +181,10 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Selector de caducidad (1 h, 24 h y 7 días) al enviar.
 - [x] Publicar v1.1.0 con las mejoras anteriores.
 - [x] Evitar el auto-zoom de Safari en iOS subiendo los campos de texto a 16 px.
+- [x] Publicar v1.1.1 y sincronizar `package.json`.
+- [x] Aclarar en el README cómo se actualiza la PWA instalada.
+- [x] Proteger `master` con `enforce_admins` y documentar los saltos mayores de dependencias.
+- [ ] Revisar de forma manual los saltos mayores de dependencias cuando haya hueco.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
 ## 11. Historial de actualizaciones
@@ -192,3 +199,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: quinta mejora: caducidad elegible al enviar (1 h, 24 h o 7 días), validada en el Worker y conservada al desfijar. Cierre de las cinco mejoras con publicación de v1.1.0.
 - 19/11/2026: limpieza documental final de la v1.1.0: tabla de versiones con soporte, texto de caducidad y memoria del proyecto actualizados; CI en verde.
 - 20/11/2026: corrección del auto-zoom en iOS: campos de texto a 16 px, opción de bloquear el zoom manual descartada y despliegue verificado en remoto.
+- 20/11/2026: cierre de la v1.1.1 con versión sincronizada, explicación de la actualización de la PWA, protección estricta de `master` y decisión sobre los saltos mayores de dependencias.

@@ -118,6 +118,11 @@ viniendo de Cloudflare, así que hace falta conexión para usar la bandeja. Si e
 botón de instalar no aparece, comprueba que estás en HTTPS y que la página se ha
 recargado una vez después del despliegue.
 
+La aplicación instalada se actualiza sola: al abrirla con conexión descarga la
+versión publicada. Si ves la interfaz antigua, cierra la ventana y vuelve a
+abrirla; no hace falta desinstalar. Solo conviene reinstalar si cambian el
+nombre o el icono, porque Windows y los móviles pueden tardar en refrescarlos.
+
 ## Comprobación rápida de la API
 
 ```bash

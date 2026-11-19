@@ -3,7 +3,7 @@
 Este archivo sigue las convenciones de [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y [Semantic Versioning](https://semver.org/lang/es/).
 
-## [No publicado]
+## [1.1.1] - 2026-11-20
 
 ### Corregido
 
@@ -61,4 +61,6 @@ Primera versión pública.
 - Dependencia de Supabase y del almacenamiento R2; las migraciones antiguas se
   conservan solo como referencia histórica en `docs/historial/supabase/`.
 
+[1.1.1]: https://github.com/qirris/puente/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/qirris/puente/releases/tag/v1.1.0
 [1.0.0]: https://github.com/qirris/puente/releases/tag/v1.0.0

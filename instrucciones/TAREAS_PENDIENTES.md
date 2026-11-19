@@ -54,6 +54,11 @@
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.
 
+## Mantenimiento
+- [x] Publicar la versión v1.1.1 con la corrección del auto-zoom.
+- [x] Activar la protección estricta de `master` (`enforce_admins`).
+- [ ] Revisar de forma manual los saltos mayores de dependencias.
+
 ## Histórico (Supabase, superado el 19/11/2026)
 - [x] Desarrollo del MVP original (React 19 + TypeScript + Supabase).
 - [x] Migraciones SQL, RLS y Storage originales.

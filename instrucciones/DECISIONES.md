@@ -109,3 +109,12 @@ Se descartó `user-scalable=no` y `maximum-scale=1`: iOS los ignora y quitan a
 quien lo necesita la opción de ampliar. Tampoco se añadió un interruptor en el
 panel de sesiones, porque ese panel gestiona dispositivos y no preferencias de
 pantalla. El zoom que Safari ya había guardado se quita en el propio móvil.
+
+## 20/11/2026 · Saltos mayores de dependencias pendientes
+
+Vite 8, Vitest 5, TypeScript 7, `@vitejs/plugin-react` 6 y `@types/node` 26
+tienen versiones mayores disponibles. Dependabot los propuso y se cerraron sin
+aplicar: Vite, Vitest y el plugin de React forman un conjunto que conviene
+actualizar a la vez, y un salto mayor puede romper la compilación o las pruebas.
+Se mantienen las versiones actuales, se revisan de forma manual de vez en
+cuando y Dependabot sigue trayendo las actualizaciones menores.
