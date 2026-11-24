@@ -1,170 +1,163 @@
 # Puente
 
-Tu bandeja privada para enviar enlaces, notas, fotos y archivos entre el móvil y el ordenador.
+Una bandeja privada para pasar enlaces, notas, fotos y archivos del móvil al portátil, y al revés.
 
-![Pantalla de acceso de Puente](docs/captura.jpg)
+[Abrir Puente](https://puente-api.qirris.workers.dev) · [Instalación](#instalar-puente-como-aplicación) · [Desarrollo local](#desarrollo-local)
+
+Es un proyecto personal. El despliegue requiere una cuenta y el registro está protegido por un código de invitación; el enlace no da acceso a una demo pública.
+
+![Bandeja de Puente en escritorio, con el formulario de envío, la búsqueda y varios envíos de demostración](docs/capturas/bandeja-escritorio.jpg)
+
+*La bandeja en escritorio. Todas las capturas usan una cuenta y contenido de demostración en un entorno local.*
 
 ## ¿Por qué hice Puente?
 
-Lo hice para mí, porque lo necesitaba. Siempre me encontraba con el mismo problema: tener que subir archivos a un servicio u otro para pasarlos del móvil al ordenador y volver, y eso se me hacía incómodo y poco privado. Quería una bandeja sencilla, mía, donde dejar enlaces, notas, fotos y archivos y olvidarme del resto.
+Creé Puente porque cada vez que quería pasar algo del móvil al portátil, o al revés, acababa enviándomelo por WhatsApp o subiéndolo a Drive. Para algo tan sencillo perdía demasiado tiempo. Quería abrir una aplicación, dejar allí el archivo, la foto o el enlace y encontrarlo en el otro dispositivo.
 
-La aplicación Puente fue desarrollada con asistencia de inteligencia artificial. Yo definí qué necesitaba y revisé las decisiones; la IA me ayudó a escribir el código, los textos y a resolver los detalles técnicos.
+De ahí salió la idea: una misma bandeja para mis dispositivos, sin tener que buscar después en un chat o en una carpeta dónde había dejado cada cosa. No hace falta que los dos estén encendidos a la vez ni conectados a la misma Wi-Fi.
 
-## Ámbito del proyecto
+**Lo desarrollé con ayuda de inteligencia artificial.** Partí de un problema que tenía en mi día a día y utilicé la IA como ayuda para construir la aplicación. Lo comparto aquí con su código y su documentación, incluyendo sus limitaciones.
 
-Puente es un proyecto personal, no un servicio abierto al público. El registro
-nuevo exige un código de invitación, que se guarda en Cloudflare como secreto
-`PUENTE_CODIGO_INVITACION` (nunca en el repositorio). Si el secreto no está
-configurado, el registro queda abierto: eso solo se recomienda en desarrollo
-local.
+## Qué puedes hacer
 
-El código se comparte bajo licencia MIT. El despliegue está pensado para un
-solo usuario y depende de las cuotas gratuitas de Cloudflare.
+- **Dejar algo y recogerlo en otro dispositivo:** enlaces, notas, fotos y archivos de hasta 20 MB por archivo.
+- **Enviar varios archivos de una vez:** seleccionarlos o arrastrarlos, revisar las vistas previas y quitar alguno antes de enviarlos. Se suben en orden, con progreso visible.
+- **Encontrar lo que enviaste:** buscar por texto o nombre de archivo y filtrar entre enlaces, notas, fotos y archivos.
+- **Elegir cuánto se conserva:** 1 hora, 24 horas o 7 días; fijar un envío para que no caduque.
+- **Usarlo como aplicación:** instalar Puente en el móvil o el ordenador y aplicar nuevas versiones desde el aviso «Actualización pendiente».
+- **Gestionar el acceso:** revisar las sesiones abiertas, cerrar las que no reconozcas y generar un código de recuperación.
 
-## Arquitectura
+## Un vistazo por dentro
 
-| Parte | Tecnología | Nombre en Cloudflare |
-| --- | --- | --- |
-| Interfaz | React + Vite + TypeScript | `puente-api` (recursos estáticos) |
-| API | Cloudflare Workers (`src/index.ts`) | `puente-api` |
-| Datos | D1 (SQLite) | `puente-datos` |
-| Archivos | Workers KV (espacio de nombres privado) | `puente-archivos` |
+<table>
+  <tr>
+    <th>Tu bandeja en vista móvil</th>
+    <th>Varias imágenes en un envío</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/capturas/bandeja-movil.jpg" width="320" alt="Vista móvil de Puente con búsqueda, filtros y envíos de demostración"></td>
+    <td align="center"><img src="docs/capturas/seleccion-multiple.jpg" width="320" alt="Dos imágenes de ejemplo seleccionadas, con vistas previas, eliminación individual y botón Enviar 2 archivos"></td>
+  </tr>
+  <tr>
+    <td>Busca, filtra, copia o descarga lo que dejaste desde el otro dispositivo.</td>
+    <td>Revisa las imágenes y elige la caducidad antes de enviarlas.</td>
+  </tr>
+</table>
 
-Todo se sirve desde el mismo Worker. No se necesitan claves de terceros: las
-contraseñas se guardan como hash PBKDF2 en D1 y las sesiones son tokens
-aleatorios también en D1. El único secreto de la aplicación es el código de
-invitación, que se configura en Cloudflare como `PUENTE_CODIGO_INVITACION` y
-nunca se versiona.
+*Vistas móviles capturadas en un navegador a 390 × 844 píxeles; no son fotografías de un teléfono.*
 
-La bandeja admite búsqueda por texto, nombre de archivo o tipo MIME y filtros
-por tipo de envío. El filtrado se hace en el navegador, sin peticiones extra.
-Al enviar puedes elegir la caducidad: 1 hora, 24 horas (por defecto) o 7 días.
-El plazo se guarda con el envío, así que al desfijar un envío recupera el tiempo
-que elegiste al crearlo.
+![Pantalla actual de acceso a Puente, con la presentación del proyecto y el formulario de inicio de sesión vacío](docs/capturas/acceso.jpg)
 
-También puedes revisar y cerrar tus sesiones activas desde el icono de
-dispositivos de la cabecera; cada una se identifica con un código público, nunca
-con el token de acceso.
+*La misma cuenta en el móvil y en el ordenador. [Cómo se prepararon las capturas](docs/capturas/README.md).*
 
-Para recuperar el acceso no hay correo: al crear la cuenta se muestra un código
-de un solo uso que conviene guardar en un gestor de contraseñas. También se puede
-generar uno nuevo desde el panel de sesiones mientras haya una sesión activa.
-Caduca en 1 hora, admite cinco intentos y cambiar la contraseña cierra todas las
-sesiones.
+## Cómo usarlo
 
-### Seguridad
+1. Abre Puente e inicia sesión con la misma cuenta en tus dispositivos. Para crear una cuenta en este despliegue necesitas una invitación.
+2. Pega un enlace, escribe una nota o adjunta uno o varios archivos. Elige la caducidad y pulsa **Enviar**.
+3. Abre la bandeja en el otro dispositivo: puedes copiar el texto, abrir el enlace, previsualizar las imágenes o descargar los archivos.
 
-- Contraseñas con PBKDF2-SHA256 de 100 000 iteraciones y sal aleatoria.
-- Sesiones aleatorias de 32 bytes guardadas en D1, con caducidad de 30 días.
-- Bloqueo de 15 minutos tras 5 accesos fallidos por correo y dirección IP.
-- Códigos de recuperación guardados como hash PBKDF2; nunca se envían por correo.
-- CORS restringido al mismo origen y cabeceras de seguridad en todas las
-  respuestas (`Referrer-Policy: no-referrer`, CSP, `X-Frame-Options`, `nosniff`).
-- El token de sesión viaja en la URL de las vistas previas de imagen. Es una
-  limitación conocida y asumida; se mitiga con `Referrer-Policy: no-referrer` y
-  `Cache-Control: no-store`. No se ha sustituido por cookies por decisión
-  propia del proyecto.
+La bandeja comprueba si hay cambios cada 10 segundos mientras está visible. Los envíos no fijados caducan según el plazo elegido; la limpieza de registros y archivos se ejecuta cada hora.
 
-Los detalles están en `SECURITY.md` y `instrucciones/SEGURIDAD.md`.
+## Tecnologías
+
+| Parte | Tecnología |
+| --- | --- |
+| Interfaz | React 19, TypeScript y Vite |
+| API y recursos estáticos | Cloudflare Workers |
+| Datos y sesiones | Cloudflare D1 (SQLite) |
+| Archivos | Cloudflare Workers KV |
+| Pruebas | Vitest, con SQLite en memoria y KV de prueba |
+| Instalación | PWA con manifiesto y service worker |
+
+La interfaz y la API se sirven desde el mismo Worker. Las fuentes se alojan en el proyecto. La arquitectura completa está en [Arquitectura](instrucciones/ARQUITECTURA.md).
 
 ## Desarrollo local
 
-Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
+Necesitas **Node.js 24 o superior** y npm. Las pruebas del Worker utilizan `node:sqlite`.
 
 ```bash
-npm install
-npm run dev:api     # Wrangler en http://localhost:8787
-npm run dev         # Vite en http://localhost:5173
-npm test            # 56 pruebas automáticas
-npm run build       # comprueba tipos y genera dist/
-```
-
-Vite redirige `/api` al puerto 8787, así que no hace falta configurar nada.
-La primera vez, Wrangler crea la base de datos local en `.wrangler/state/`.
-
-Para aplicar migraciones:
-
-```bash
+git clone https://github.com/qirris/puente.git
+cd puente
+npm ci
+npm run build
 npx wrangler d1 migrations apply puente-datos --local
-npx wrangler d1 migrations apply puente-datos --remote
 ```
 
-## Despliegue
+Arranca la API y la interfaz en dos terminales distintas:
 
 ```bash
+# Terminal 1: API y almacenamiento locales
+npm run dev:api -- --local
+```
+
+```bash
+# Terminal 2: interfaz
+npm run dev
+```
+
+Abre [localhost:5173](http://localhost:5173). Vite redirige las peticiones `/api` a Wrangler en el puerto 8787. La base de datos y los archivos locales se guardan en `.wrangler/state/`.
+
+Si no configuras `PUENTE_CODIGO_INVITACION`, puedes crear una cuenta local sin código. Ese comportamiento es para desarrollo: configura el secreto para proteger el registro de un despliegue propio. No guardes su valor en el repositorio.
+
+Para comprobar el proyecto:
+
+```bash
+npm test           # 60 pruebas automáticas
+npm run build      # comprobación de tipos y compilación de producción
+```
+
+El procedimiento completo está en [Pruebas](instrucciones/PRUEBAS.md).
+
+## Instalar Puente como aplicación
+
+Abre [Puente](https://puente-api.qirris.workers.dev) con conexión:
+
+- **Ordenador:** utiliza la opción de instalar la aplicación del navegador, cuando esté disponible.
+- **Android:** en Chrome, utiliza la opción de instalar o añadir a la pantalla de inicio.
+- **iPhone:** en Safari, abre el menú de compartir y elige **Añadir a la pantalla de inicio**.
+
+La aplicación guarda la interfaz para facilitar la apertura. Enviar, sincronizar y descargar contenido requiere conexión.
+
+Puente comprueba si hay una nueva versión al abrirse, al volver a ella y cada minuto mientras está visible y hay conexión. Cuando está lista, muestra **Actualización pendiente** con el botón **Actualizar ahora**. Termina tus envíos antes de pulsarlo: la app se recargará.
+
+Si tienes una versión anterior a ese aviso, cierra y vuelve a abrir Puente con conexión. No hace falta desinstalarla.
+
+## Despliegue propio
+
+Para alojar tu propia instancia, necesitas una cuenta de Cloudflare y Wrangler autenticado. En `wrangler.toml`, configura tus propios recursos D1 y KV y los bindings `PUENTE_DB` y `PUENTE_ARCHIVOS`.
+
+Aplica las migraciones a tu base de datos y configura el código de invitación como secreto antes de publicar:
+
+```bash
+npx wrangler login
+npx wrangler d1 migrations apply puente-datos --remote
+npx wrangler secret put PUENTE_CODIGO_INVITACION
+npm test
 npm run build
 npm run deploy
 ```
 
-El Worker sirve automáticamente el contenido de `dist/` y la API en `/api/*`.
-La limpieza de envíos caducados corre cada hora mediante el cron `17 * * * *`.
-La versión desplegada está en https://puente-api.qirris.workers.dev.
+El comando de migraciones supone que has llamado `puente-datos` a tu base; si usas otro nombre, sustitúyelo. El Worker sirve `dist/` y la API en `/api/*`. El despliegue es manual: la integración continua comprueba el código, pero no publica la app.
 
-## Instalar Puente como aplicación
+Consulta [Operaciones](docs/OPERACIONES.md) para los recursos, las copias de seguridad, la limpieza y la vuelta a una versión anterior.
 
-Puente se puede instalar para abrirla en su propia ventana, sin la barra del
-navegador y con un icono propio, tanto en el ordenador como en el móvil.
+## Ámbito, privacidad y limitaciones
 
-**En Windows:** abre la URL en Edge y elige *⋯ → Aplicaciones → Instalar este
-sitio como aplicación*. En Chrome, elige *⋯ → Guardar y compartir → Crear
-acceso directo* y marca «Abrir como ventana». Después puedes anclar Puente a la
-barra de tareas o arrastrar el acceso directo al escritorio.
+Puente nació para uso personal. El despliegue actual no es un servicio abierto al público y depende de las cuotas de Cloudflare; compartir el código no garantiza disponibilidad ni capacidad para uso masivo.
 
-**En el móvil:** abre la URL en Chrome (Android) o en Safari (iPhone) y pulsa
-*Instalar aplicación* o *Añadir a la pantalla de inicio*, según el navegador.
+- Cada cuenta accede únicamente a sus envíos mediante las comprobaciones del Worker. Las contraseñas se guardan como hash PBKDF2; el acceso usa sesiones propias y tiene un límite de intentos fallidos.
+- Las vistas previas y las descargas llevan el token de sesión en la URL. Es una limitación conocida, mitigada con `Referrer-Policy: no-referrer` y `Cache-Control: no-store`; evita compartir esas URL.
+- La recuperación de contraseña no utiliza correo. Guarda el código de recuperación: si lo pierdes y no tienes una sesión activa, no hay recuperación automática. El código caduca en una hora y admite cinco intentos.
+- Workers KV tiene propagación eventual: un archivo recién subido puede tardar unos segundos en estar disponible desde otra ubicación.
+- La sincronización se hace por sondeo, y los dos dispositivos necesitan conexión para intercambiar contenido.
 
-La instalación guarda solo la interfaz. Los envíos y los archivos siguen
-viniendo de Cloudflare, así que hace falta conexión para usar la bandeja. Si el
-botón de instalar no aparece, comprueba que estás en HTTPS y que la página se ha
-recargado una vez después del despliegue.
+Los detalles están en [Seguridad](instrucciones/SEGURIDAD.md) y en la [política para informar de vulnerabilidades](SECURITY.md).
 
-La aplicación comprueba si hay una nueva versión al abrirla, al volver a ella
-y cada minuto mientras está visible y hay conexión. Cuando está lista, muestra
-**Actualización pendiente** y el botón **Actualizar ahora**. Termina tus envíos
-y pulsa el botón: Puente se recarga con la nueva versión. También aparece en
-el navegador, sin necesidad de instalar la app.
+## Más documentación
 
-Si todavía tienes una versión anterior a este aviso, cierra la ventana y vuelve
-a abrirla con conexión; no hace falta desinstalar. Solo conviene reinstalar si cambian el
-nombre o el icono, porque Windows y los móviles pueden tardar en refrescarlos.
+- [Cambios por versión](CHANGELOG.md).
+- [Cómo colaborar](CONTRIBUTING.md).
+- [Decisiones del proyecto](instrucciones/DECISIONES.md).
+- [Código de la API](src/index.ts) y [migraciones](migrations/).
 
-## Comprobación rápida de la API
-
-```bash
-curl -X POST http://localhost:8787/api/registro \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"tu@email.com","password":"123456","codigo":"TU_CODIGO_DE_INVITACION"}'
-```
-
-Sustituye `TU_CODIGO_DE_INVITACION` por el valor del secreto
-`PUENTE_CODIGO_INVITACION`. En desarrollo local, si no configuras ese secreto,
-el campo `codigo` no hace falta y el registro queda abierto.
-
-La respuesta incluye un `token`. Úsalo como `Authorization: Bearer <token>`
-para el resto de la API. Tras 5 accesos fallidos seguidos desde la misma IP y
-con el mismo correo, la API responde 429 durante 15 minutos.
-
-## Estructura
-
-- `src/index.ts` — API del Worker y limpieza programada.
-- `src/lib/` — cliente HTTP, sesión, bandeja y subida con progreso.
-- `public/manifest.webmanifest` — datos de instalación como aplicación.
-- `public/sw.js` — caché mínima de la interfaz; nunca guarda la API.
-- `public/icon-*.png` — iconos para el escritorio y el móvil.
-- `migrations/` — esquema de D1.
-- `tests/` — base de datos y KV falsos para las pruebas del Worker.
-- `docs/historial/supabase/` — migraciones antiguas, solo como referencia histórica.
-- `wrangler.toml` — configuración de Cloudflare.
-
-## Documentación
-
-- `SECURITY.md` — cómo informar de un problema de seguridad.
-- `CHANGELOG.md` — cambios por versión.
-- `CONTRIBUTING.md` — cómo colaborar y convenciones de commits.
-- `docs/OPERACIONES.md` — copias, restauración, despliegue y rollback.
-- `instrucciones/ARQUITECTURA.md` — módulos y flujo de datos.
-- `instrucciones/SEGURIDAD.md` — decisiones y medidas aplicadas.
-- `instrucciones/PRUEBAS.md` — qué se prueba y cómo verificar en remoto.
-- `instrucciones/DECISIONES.md` — por qué se eligió cada opción.
-
-Todo el proyecto está en español.
+Proyecto en español, compartido bajo [licencia MIT](LICENSE).
