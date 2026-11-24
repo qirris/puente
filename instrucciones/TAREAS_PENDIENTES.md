@@ -57,6 +57,7 @@
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.
 
 ## Mantenimiento
+- [x] Presentar Puente en el README con su historia, ayuda de IA y cuatro capturas de demostración reales, sin utilizar la cuenta personal.
 - [x] Publicar la versión v1.1.1 con la corrección del auto-zoom.
 - [x] Activar la protección estricta de `master` (`enforce_admins`).
 - [ ] Revisar de forma manual los saltos mayores de dependencias.

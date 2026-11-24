@@ -38,7 +38,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
   - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`, `0006_duracion_envios.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 56 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 60 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -112,6 +112,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 20/11/2026: publicada la v1.1.1 con esa corrección; `package.json` sincronizado a 1.1.1, README ampliado con la actualización de la PWA y `master` protegida con `enforce_admins` para que el check obligatorio no se pueda saltar.
 - 24/11/2026: el compositor permite seleccionar o arrastrar varios archivos, revisarlos y subirlos secuencialmente; conserva en la cola los que falten si una subida falla.
 - 24/11/2026: aviso de actualización de la PWA y del navegador. Vite genera una huella de la interfaz para renovar el service worker y su caché; las nuevas versiones esperan la pulsación de «Actualizar ahora».
+- 24/11/2026: README reorganizado con la historia personal (pasar contenido entre móvil y portátil mediante WhatsApp o Drive), aviso claro de desarrollo con IA y cuatro capturas reales en `docs/capturas/`. Cuenta y contenido ficticios en D1/KV locales aislados; sin cambios de aplicación ni de producción. Sustituida la captura antigua de acceso y documentado cómo renovar las imágenes. Compilación de producción correcta y 16 enlaces/recursos locales del README comprobados.
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -210,3 +211,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 20/11/2026: corrección del auto-zoom en iOS: campos de texto a 16 px, opción de bloquear el zoom manual descartada y despliegue verificado en remoto.
 - 20/11/2026: cierre de la v1.1.1 con versión sincronizada, explicación de la actualización de la PWA, protección estricta de `master` y decisión sobre los saltos mayores de dependencias.
 - 24/11/2026: selección múltiple en el compositor, con previsualización, retirada individual y subida secuencial.
+- 24/11/2026: presentación del repositorio con README personal, galería de escritorio/móvil y selección múltiple, instrucciones locales revisadas y enlaces a la documentación técnica. Trabajo en una PR independiente de la PR #9 de registro de despliegue.
