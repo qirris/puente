@@ -1,22 +1,21 @@
 // Puente · caché mínima de la interfaz para permitir la instalación como aplicación.
 // Los envíos y los archivos siguen viniendo siempre de Cloudflare.
 
-const NOMBRE_CACHÉ = 'puente-interfaz-v1'
-const ARCHIVOS_INICIALES = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
-  '/icon-192.png',
-  '/icon-512.png',
-]
+// Vite sustituye estos valores con la huella y los recursos de cada compilación.
+const NOMBRE_CACHÉ = 'puente-interfaz-__VERSION__'
+const ARCHIVOS_INICIALES = ['/', '/index.html', '/favicon.svg', '/icon-192.png', '/icon-512.png', '__RECURSOS__']
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
     caches
       .open(NOMBRE_CACHÉ)
-      .then((caché) => caché.addAll(ARCHIVOS_INICIALES))
-      .then(() => self.skipWaiting()),
+      .then((caché) => caché.addAll(ARCHIVOS_INICIALES)),
   )
+})
+
+// Las actualizaciones esperan hasta que el usuario pulse «Actualizar ahora».
+self.addEventListener('message', (evento) => {
+  if (evento.data?.tipo === 'ACTUALIZAR') void self.skipWaiting()
 })
 
 self.addEventListener('activate', (evento) => {
@@ -26,7 +25,7 @@ self.addEventListener('activate', (evento) => {
       .then((claves) =>
         Promise.all(
           claves
-            .filter((clave) => clave !== NOMBRE_CACHÉ)
+            .filter((clave) => clave.startsWith('puente-interfaz-') && clave !== NOMBRE_CACHÉ)
             .map((clave) => caches.delete(clave)),
         ),
       )

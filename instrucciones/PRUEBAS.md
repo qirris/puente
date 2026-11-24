@@ -10,13 +10,14 @@ npm run test:watch
 npm run build   # comprueba tipos de aplicación, Worker y pruebas
 ```
 
-Las 56 pruebas están repartidas así:
+Las 60 pruebas están repartidas así:
 
 | Archivo | Qué cubre |
 | --- | --- |
 | `src/lib/validation.test.ts` | Enlaces, texto, tamaño de archivos y nombres seguros. |
 | `src/lib/format.test.ts` | Tamaños, fechas, caducidad y etiquetas en español. |
 | `src/lib/filtrado.test.ts` | Búsqueda por texto, acentos, nombre de archivo y filtros por tipo. |
+| `src/lib/actualizaciones.test.ts` | Primera instalación, detección de versiones pendientes, activación y coordinación entre pestañas. |
 | `src/index.test.ts` | Registro, acceso, límite de intentos, cabeceras, CORS, sesión en URL, sesiones activas, recuperación, caducidad elegible, archivos y limpieza. |
 
 Las pruebas del Worker usan `tests/bdFalsa.ts`: una base SQLite en memoria con

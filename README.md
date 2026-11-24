@@ -118,9 +118,14 @@ viniendo de Cloudflare, así que hace falta conexión para usar la bandeja. Si e
 botón de instalar no aparece, comprueba que estás en HTTPS y que la página se ha
 recargado una vez después del despliegue.
 
-La aplicación instalada se actualiza sola: al abrirla con conexión descarga la
-versión publicada. Si ves la interfaz antigua, cierra la ventana y vuelve a
-abrirla; no hace falta desinstalar. Solo conviene reinstalar si cambian el
+La aplicación comprueba si hay una nueva versión al abrirla, al volver a ella
+y cada minuto mientras está visible y hay conexión. Cuando está lista, muestra
+**Actualización pendiente** y el botón **Actualizar ahora**. Termina tus envíos
+y pulsa el botón: Puente se recarga con la nueva versión. También aparece en
+el navegador, sin necesidad de instalar la app.
+
+Si todavía tienes una versión anterior a este aviso, cierra la ventana y vuelve
+a abrirla con conexión; no hace falta desinstalar. Solo conviene reinstalar si cambian el
 nombre o el icono, porque Windows y los móviles pueden tardar en refrescarlos.
 
 ## Comprobación rápida de la API
