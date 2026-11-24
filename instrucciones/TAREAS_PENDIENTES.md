@@ -52,6 +52,7 @@
 - [x] Evitar el auto-zoom de Safari en iOS subiendo los campos a 16 px.
 - [x] Permitir seleccionar, revisar y enviar varias fotos o archivos de una vez.
 - [x] Mostrar «Actualización pendiente» y un botón para activar la nueva versión.
+- [x] Fusionar la PR #8 y desplegar ambas mejoras en Cloudflare; recursos públicos verificados el 24/11/2026.
 
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.
