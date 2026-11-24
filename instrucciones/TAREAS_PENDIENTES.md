@@ -50,6 +50,8 @@
 - [x] Publicar la versión v1.1.0 con las cinco mejoras.
 - [x] Ajustar las referencias documentales de la v1.1.0 (soporte y caducidad).
 - [x] Evitar el auto-zoom de Safari en iOS subiendo los campos a 16 px.
+- [x] Permitir seleccionar, revisar y enviar varias fotos o archivos de una vez.
+- [x] Mostrar «Actualización pendiente» y un botón para activar la nueva versión.
 
 ## Prueba final del usuario
 - [ ] Volver a iniciar sesión (se invalidó la sesión anterior por precaución) y probar el envío entre móvil y ordenador.

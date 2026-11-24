@@ -74,6 +74,11 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Selector de caducidad al enviar: 1 hora, 24 horas (por defecto) o 7 días, tanto
   para texto y enlaces como para archivos. El plazo se guarda y se recupera al
   desfijar un envío.
+- Selección múltiple de fotos y archivos, con vista previa, eliminación individual
+  y subida secuencial para mantener visible el progreso de cada archivo.
+- Aviso «Actualización pendiente» cuando una nueva interfaz está lista, con
+  activación y recarga mediante «Actualizar ahora»; comprobación al abrir,
+  volver a la app y cada minuto en primer plano con conexión.
 
 ## 6. Cambios realizados
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
@@ -105,6 +110,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: limpieza documental final: `SECURITY.md` marca la 1.1.x como versión con soporte, `instrucciones/SEGURIDAD.md` describe la caducidad elegible y `memoria.md` actualiza el alcance; commit `4aad8e1`. Sin cambios de código ni redespliegue.
 - 20/11/2026: corregido el auto-zoom de Safari en iOS: `.input-shell input` y `.search-field input` pasan de 14,5 y 12,5 px a 16 px. Se descartó bloquear el zoom manual y añadir un interruptor en sesiones; desplegada la versión `772d439f-8275-4ce7-997f-ba78d7420708`.
 - 20/11/2026: publicada la v1.1.1 con esa corrección; `package.json` sincronizado a 1.1.1, README ampliado con la actualización de la PWA y `master` protegida con `enforce_admins` para que el check obligatorio no se pueda saltar.
+- 24/11/2026: el compositor permite seleccionar o arrastrar varios archivos, revisarlos y subirlos secuencialmente; conserva en la cola los que falten si una subida falla.
+- 24/11/2026: aviso de actualización de la PWA y del navegador. Vite genera una huella de la interfaz para renovar el service worker y su caché; las nuevas versiones esperan la pulsación de «Actualizar ahora».
 
 ## 7. Decisiones tomadas
 - Cloudflare en lugar de Supabase: el usuario no quiere facilitar tarjeta de crédito.
@@ -184,6 +191,8 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - [x] Publicar v1.1.1 y sincronizar `package.json`.
 - [x] Aclarar en el README cómo se actualiza la PWA instalada.
 - [x] Proteger `master` con `enforce_admins` y documentar los saltos mayores de dependencias.
+- [x] Permitir seleccionar y enviar varias fotos o archivos de una vez.
+- [x] Mostrar actualizaciones pendientes y permitir aplicarlas desde la app.
 - [ ] Revisar de forma manual los saltos mayores de dependencias cuando haya hueco.
 - [ ] El usuario vuelve a iniciar sesión (se invalidó su sesión por precaución) y prueba la app desde móvil y ordenador.
 
@@ -200,3 +209,4 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - 19/11/2026: limpieza documental final de la v1.1.0: tabla de versiones con soporte, texto de caducidad y memoria del proyecto actualizados; CI en verde.
 - 20/11/2026: corrección del auto-zoom en iOS: campos de texto a 16 px, opción de bloquear el zoom manual descartada y despliegue verificado en remoto.
 - 20/11/2026: cierre de la v1.1.1 con versión sincronizada, explicación de la actualización de la PWA, protección estricta de `master` y decisión sobre los saltos mayores de dependencias.
+- 24/11/2026: selección múltiple en el compositor, con previsualización, retirada individual y subida secuencial.
