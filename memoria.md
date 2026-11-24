@@ -12,6 +12,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Repositorio: https://github.com/qirris/puente (público desde el 19/11/2026, previa aprobación del usuario).
 - El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
 - Versión actual: v1.1.1, con tag y release publicados el 20/11/2026.
+- Despliegue del 24/11/2026: selección múltiple y aviso de actualización, PR #8 fusionada en `master` (`66348f3`); versión de Cloudflare `77c3ee3d-e0fe-41ae-b6df-551b5c8d23f1`. No se ha creado un nuevo tag ni release.
 - Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
 - El usuario ya creó su cuenta real el 19/11/2026 a las 14:57; los datos de prueba creados durante la revisión se eliminaron.
@@ -38,7 +39,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
   - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`, `0006_duracion_envios.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 56 pruebas con Vitest.
+  - `src/*.test.ts` y `src/lib/*.test.ts`: 60 pruebas con Vitest.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -134,6 +135,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Los saltos mayores de dependencias se revisan a mano: Vite, Vitest y el plugin de React deben actualizarse juntos y un salto puede romper la compilación. Dependabot sigue trayendo solo las versiones menores.
 
 ## 8. Pruebas verificadas
+- 24/11/2026: 60 pruebas y CI de la PR #8 correctas; compilación de `master` correcta y despliegue `77c3ee3d-e0fe-41ae-b6df-551b5c8d23f1` completado. Verificado por GET en remoto: HTML, JavaScript, CSS, service worker y manifiesto devuelven 200 y coinciden byte a byte con `dist`; `/api/sesion` sin token devuelve 401 sin CORS. HTML y service worker conservan CSP. No se han usado credenciales ni datos de la cuenta real para probar la selección de fotos desde un dispositivo.
 - 19/11/2026: `npm run build` correcto.
 - 19/11/2026: API local (`wrangler dev --local`) con KV: registro, acceso, creación de envío, listado, fijado, subida de archivo y descarga con token en query. Todas correctas.
 - 19/11/2026: primer despliegue detectó `Pbkdf2 failed: iteration counts above 100000 are not supported`; corregido y vuelto a desplegar.
