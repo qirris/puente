@@ -24,8 +24,8 @@ interface ComposerProps {
 
 export function Composer({ onSent, notify }: ComposerProps) {
   const [text, setText] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [filePreviews, setFilePreviews] = useState<string[]>([])
   const [sending, setSending] = useState(false)
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState<'uploading' | 'saving'>('uploading')
@@ -35,39 +35,40 @@ export function Composer({ onSent, notify }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (!file || !file.type.startsWith('image/')) {
-      setFilePreview(null)
-      return
-    }
-    const url = URL.createObjectURL(file)
-    setFilePreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+    const urls = files.map((file) =>
+      file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+    )
+    setFilePreviews(urls)
+    return () => urls.forEach((url) => url && URL.revokeObjectURL(url))
+  }, [files])
 
   useEffect(() => {
-    if (file) return
+    if (files.length > 0) return
     const node = textareaRef.current
     if (!node) return
     node.style.height = 'auto'
     node.style.height = `${Math.min(node.scrollHeight, 240)}px`
-  }, [text, file])
+  }, [text, files])
 
-  function resetFile() {
-    setFile(null)
+  function resetFiles() {
+    setFiles([])
     setProgress(0)
     setPhase('uploading')
     if (inputRef.current) inputRef.current.value = ''
   }
 
-  function pickFile(nextFile: File | undefined) {
-    if (!nextFile) return
-    const problem = validateFile(nextFile)
-    if (problem) {
-      notify(problem, 'error')
+  function pickFiles(nextFiles: File[]) {
+    if (nextFiles.length === 0) return
+    const validFiles = nextFiles.filter((nextFile) => {
+      const problem = validateFile(nextFile)
+      if (problem) notify(`${nextFile.name}: ${problem}`, 'error')
+      return !problem
+    })
+    if (validFiles.length === 0) {
       if (inputRef.current) inputRef.current.value = ''
       return
     }
-    setFile(nextFile)
+    setFiles((current) => [...current, ...validFiles])
     setProgress(0)
     setPhase('uploading')
   }
@@ -76,8 +77,7 @@ export function Composer({ onSent, notify }: ComposerProps) {
     event.preventDefault()
     setDragging(false)
     if (sending) return
-    const dropped = event.dataTransfer.files?.[0]
-    pickFile(dropped)
+    pickFiles(Array.from(event.dataTransfer.files ?? []))
   }
 
   const etiquetaDuracion =
@@ -108,30 +108,35 @@ export function Composer({ onSent, notify }: ComposerProps) {
     }
   }
 
-  async function submitFile(currentFile: File) {
-    const problem = validateFile(currentFile)
-    if (problem) {
-      notify(problem, 'error')
-      return
-    }
-
+  async function submitFiles(currentFiles: File[]) {
     setSending(true)
     setProgress(0)
     setPhase('uploading')
+    let sent = 0
     try {
-      const item = await sendFile(
-        currentFile,
-        (percent) => {
-          setProgress(percent)
-          if (percent >= 100) setPhase('saving')
-        },
-        duracion,
+      for (const currentFile of currentFiles) {
+        const item = await sendFile(
+          currentFile,
+          (percent) => {
+            setProgress(percent)
+            if (percent >= 100) setPhase('saving')
+          },
+          duracion,
+        )
+        sent += 1
+        onSent(item)
+        setFiles((pending) => pending.filter((file) => file !== currentFile))
+        setProgress(0)
+        setPhase('uploading')
+      }
+      resetFiles()
+      notify(
+        `${sent === 1 ? 'Archivo guardado' : `${sent} archivos guardados`}. Caduca en ${etiquetaDuracion}.`,
+        'success',
       )
-      resetFile()
-      onSent(item)
-      notify(`Archivo guardado. Caduca en ${etiquetaDuracion}.`, 'success')
     } catch (err) {
-      notify(err instanceof Error ? err.message : 'No se pudo subir el archivo.', 'error')
+      const detail = err instanceof Error ? err.message : 'No se pudo subir el archivo.'
+      notify(sent > 0 ? `${sent} enviados. ${detail}` : detail, 'error')
     } finally {
       setSending(false)
     }
@@ -139,8 +144,8 @@ export function Composer({ onSent, notify }: ComposerProps) {
 
   async function submitCurrent() {
     if (sending) return
-    if (file) {
-      await submitFile(file)
+    if (files.length > 0) {
+      await submitFiles(files)
     } else {
       await submitText()
     }
@@ -158,11 +163,11 @@ export function Composer({ onSent, notify }: ComposerProps) {
     }
   }
 
-  const canSend = file ? true : text.trim().length > 0
+  const canSend = files.length > 0 || text.trim().length > 0
 
   return (
     <section
-      className={`composer${dragging ? ' is-dragging' : ''}${file ? ' has-file' : ''}`}
+      className={`composer${dragging ? ' is-dragging' : ''}${files.length > 0 ? ' has-file' : ''}`}
       onDragOver={(event) => {
         event.preventDefault()
         if (!sending) setDragging(true)
@@ -183,31 +188,33 @@ export function Composer({ onSent, notify }: ComposerProps) {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {file ? (
-          <div className="file-draft">
-            <button
-              type="button"
-              className="file-remove"
-              onClick={resetFile}
-              disabled={sending}
-              aria-label="Quitar archivo"
-            >
-              <IconX size={16} />
-            </button>
-            {filePreview ? (
-              <img className="file-draft-image" src={filePreview} alt="Vista previa del archivo" />
-            ) : (
-              <div className="file-draft-icon">
-                <IconFile size={30} />
-                <span>{file.name.split('.').pop()?.toUpperCase().slice(0, 4) || 'FILE'}</span>
+        {files.length > 0 ? (
+          <div className="file-drafts">
+            {files.map((file, index) => (
+              <div className="file-draft" key={`${file.name}-${file.size}-${file.lastModified}-${index}`}>
+                <button
+                  type="button"
+                  className="file-remove"
+                  onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                  disabled={sending}
+                  aria-label={`Quitar ${file.name}`}
+                >
+                  <IconX size={16} />
+                </button>
+                {filePreviews[index] ? (
+                  <img className="file-draft-image" src={filePreviews[index]} alt={`Vista previa de ${file.name}`} />
+                ) : (
+                  <div className="file-draft-icon">
+                    <IconFile size={30} />
+                    <span>{file.name.split('.').pop()?.toUpperCase().slice(0, 4) || 'FILE'}</span>
+                  </div>
+                )}
+                <div className="file-draft-meta">
+                  <strong title={file.name}>{file.name}</strong>
+                  <span>{formatBytes(file.size)} · {file.type || 'Tipo desconocido'}</span>
+                </div>
               </div>
-            )}
-            <div className="file-draft-meta">
-              <strong title={file.name}>{file.name}</strong>
-              <span>
-                {formatBytes(file.size)} · {file.type || 'Tipo desconocido'}
-              </span>
-            </div>
+            ))}
 
             {sending ? (
               <div className="upload-progress">
@@ -283,19 +290,23 @@ export function Composer({ onSent, notify }: ComposerProps) {
         </fieldset>
 
         <div className="composer-actions">
-          {!file ? (
+          {!sending ? (
             <label className={`attach-button${sending ? ' is-disabled' : ''}`}>
               <input
                 ref={inputRef}
                 type="file"
-                onChange={(event) => pickFile(event.target.files?.[0])}
+                multiple
+                onChange={(event) => {
+                  pickFiles(Array.from(event.target.files ?? []))
+                  event.target.value = ''
+                }}
                 disabled={sending}
               />
               <IconPaperclip size={18} />
               <span>Adjuntar</span>
             </label>
           ) : (
-            <span className="attach-hint">El archivo se envía solo</span>
+            <span className="attach-hint">Subiendo archivos</span>
           )}
 
           <button
@@ -309,13 +320,13 @@ export function Composer({ onSent, notify }: ComposerProps) {
               <IconArrowUp size={18} />
             )}
             {sending
-              ? file
+              ? files.length > 0
                 ? phase === 'saving'
                   ? 'Guardando…'
                   : `${progress}%`
                 : 'Guardando…'
-              : file
-                ? 'Enviar archivo'
+              : files.length > 0
+                ? files.length === 1 ? 'Enviar archivo' : `Enviar ${files.length} archivos`
                 : 'Enviar'}
           </button>
         </div>
@@ -324,8 +335,8 @@ export function Composer({ onSent, notify }: ComposerProps) {
       {dragging ? (
         <div className="drop-overlay" aria-hidden="true">
           <IconPaperclip size={28} />
-          <strong>Suelta el archivo aquí</strong>
-          <span>Máximo 20 MB</span>
+          <strong>Suelta los archivos aquí</strong>
+          <span>Máximo 20 MB por archivo</span>
         </div>
       ) : null}
     </section>
