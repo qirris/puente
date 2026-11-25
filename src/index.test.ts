@@ -7,6 +7,30 @@ type ContextoWorker = Parameters<typeof worker.fetch>[2]
 
 const contexto: ContextoWorker = { waitUntil() {} }
 
+describe('permisos de las acciones por archivo', () => {
+  it('el borrado retira el archivo propio, tolera reintentos y no toca otra cuenta', async () => {
+    const { json, llamar } = crearLlamadas()
+    const ana = await (await json('/api/registro', 'POST', { email: 'ana-seleccion@ejemplo.com', password: 'prueba-local' })).json()
+    const beto = await (await json('/api/registro', 'POST', { email: 'beto-seleccion@ejemplo.com', password: 'prueba-local' })).json()
+    const subir = async (token: string, contenido: string) => (await llamar('/api/subir', {
+      method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain', 'x-puente-nombre': 'ejemplo.txt' }, body: contenido,
+    })).json()
+    const propio = await subir(ana.token, 'propio')
+    const ajeno = await subir(beto.token, 'ajeno')
+    const borrar = (id: string, token?: string) => llamar(`/api/envios/${id}`, {
+      method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    expect((await borrar(propio.id)).status).toBe(401)
+    expect((await borrar(ajeno.id, ana.token)).status).toBe(404)
+    expect((await borrar(propio.id, ana.token)).status).toBe(200)
+    expect((await borrar(propio.id, ana.token)).status).toBe(404)
+    expect((await llamar(`/api/archivos/${propio.id}`, { headers: { Authorization: `Bearer ${ana.token}` } })).status).toBe(404)
+    const intacto = await llamar(`/api/archivos/${ajeno.id}`, { headers: { Authorization: `Bearer ${beto.token}` } })
+    expect(intacto.status).toBe(200)
+    expect(await intacto.text()).toBe('ajeno')
+  })
+})
+
 function crearLlamadas(codigoInvitacion?: string) {
   const entorno = entornoFalso(codigoInvitacion)
   const env = entorno.env as unknown as EntornoWorker

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { downloadItem, getOpenUrl } from '../lib/inbox'
 import {
   domainOf,
@@ -32,6 +32,10 @@ interface ItemCardProps {
   onPin: (item: InboxItem) => Promise<void>
   onDelete: (item: InboxItem) => Promise<void>
   notify: (message: string, tone?: ToastTone) => void
+  seleccionando?: boolean
+  seleccionado?: boolean
+  bloqueado?: boolean
+  onSeleccionar?: () => void
 }
 
 function safeHttpUrl(raw: string | null): string | null {
@@ -66,6 +70,10 @@ export function ItemCard({
   onPin,
   onDelete,
   notify,
+  seleccionando = false,
+  seleccionado = false,
+  bloqueado = false,
+  onSeleccionar,
 }: ItemCardProps) {
   const [confirming, setConfirming] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -73,6 +81,8 @@ export function ItemCard({
   const [busyAction, setBusyAction] = useState<'open' | 'download' | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
+
+  useEffect(() => { if (seleccionando) setConfirming(false) }, [seleccionando])
 
   const label = kindLabel(item.kind, item.mime_type)
   const expiry = remainingLabel(item.expires_at, item.pinned, now)
@@ -151,10 +161,17 @@ export function ItemCard({
 
   return (
     <article
-      className={`item-card item-${item.kind}${item.pinned ? ' is-pinned' : ''}`}
+      className={`item-card item-${item.kind}${item.pinned ? ' is-pinned' : ''}${seleccionado ? ' is-selected' : ''}`}
       aria-label={`${label}: ${item.file_name ?? item.content?.slice(0, 80) ?? ''}`}
     >
+      <fieldset className="item-contenido" disabled={bloqueado}>
+        <legend className="sr-only">{item.file_name ?? label}</legend>
       <header className="item-head">
+        {seleccionando ? (
+          <label className="seleccion-casilla">
+            <input type="checkbox" checked={seleccionado} onChange={onSeleccionar} aria-label={`Seleccionar ${item.file_name ?? 'archivo'}`} />
+          </label>
+        ) : null}
         <span className={`kind-badge kind-${item.kind}`}>
           {item.kind === 'text' ? <IconText size={15} /> : null}
           {item.kind === 'link' ? <IconLink size={15} /> : null}
@@ -174,7 +191,7 @@ export function ItemCard({
           </time>
         </div>
 
-        <div className="item-tools">
+        {!seleccionando ? <div className="item-tools">
           <button
             type="button"
             className={`icon-button pin-button${item.pinned ? ' active' : ''}`}
@@ -201,7 +218,7 @@ export function ItemCard({
           >
             <IconTrash size={18} />
           </button>
-        </div>
+        </div> : null}
       </header>
 
       <div className="item-body">
@@ -243,9 +260,10 @@ export function ItemCard({
           <button
             type="button"
             className="image-button"
-            onClick={() => onPreview(item)}
-            disabled={!item.previewUrl || imageFailed}
-            aria-label={`Previsualizar ${item.file_name ?? 'la imagen'}`}
+            onClick={() => seleccionando ? onSeleccionar?.() : onPreview(item)}
+            disabled={!seleccionando && (!item.previewUrl || imageFailed)}
+            aria-label={`${seleccionando ? 'Alternar selección de' : 'Previsualizar'} ${item.file_name ?? 'la imagen'}`}
+            aria-pressed={seleccionando ? seleccionado : undefined}
           >
             {item.previewUrl && !imageFailed ? (
               <img
@@ -260,7 +278,7 @@ export function ItemCard({
                 Vista previa no disponible
               </span>
             )}
-            {item.previewUrl && !imageFailed ? (
+            {item.previewUrl && !imageFailed && !seleccionando ? (
               <span className="image-zoom">
                 <IconEye size={16} /> Ver
               </span>
@@ -288,7 +306,7 @@ export function ItemCard({
                 {isPdf(item.mime_type) ? ' · PDF' : ''}
               </span>
             </div>
-            <div className="file-quick-actions">
+            {!seleccionando ? <div className="file-quick-actions">
               <button
                 type="button"
                 className="button button-small button-quiet"
@@ -315,7 +333,7 @@ export function ItemCard({
                 )}
                 Descargar
               </button>
-            </div>
+            </div> : null}
           </div>
         ) : null}
       </div>
@@ -329,7 +347,7 @@ export function ItemCard({
           {expiry}
         </span>
 
-        {hasActions ? (
+        {hasActions && !seleccionando ? (
           <div className="item-actions">
             {(item.kind === 'text' || item.kind === 'link') ? (
               <button type="button" className="button button-small button-quiet" onClick={handleCopy}>
@@ -373,7 +391,7 @@ export function ItemCard({
         ) : null}
       </footer>
 
-      {confirming ? (
+      {confirming && !seleccionando ? (
         <div className="confirm-delete" role="alertdialog" aria-label="Confirmar eliminación">
           <div>
             <strong>¿Eliminar este envío?</strong>
@@ -400,6 +418,7 @@ export function ItemCard({
           </div>
         </div>
       ) : null}
+      </fieldset>
     </article>
   )
 }

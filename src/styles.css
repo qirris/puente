@@ -1458,6 +1458,141 @@ a {
 
 /* ---------- Tarjetas de envío ---------- */
 
+.seleccion-inicio {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+}
+
+.seleccion-inicio span,
+.seleccion-barra p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.seleccion-barra {
+  position: sticky;
+  top: 80px;
+  z-index: 35;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.seleccion-cabecera,
+.seleccion-acciones,
+.seleccion-progreso {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seleccion-cabecera,
+.seleccion-progreso {
+  justify-content: space-between;
+}
+
+.seleccion-cabecera strong,
+.seleccion-progreso span {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.seleccion-barra .button,
+.seleccion-inicio .button {
+  min-height: 44px;
+}
+
+.seleccion-eliminar {
+  color: var(--danger);
+}
+
+.seleccion-casilla {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.seleccion-casilla input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent-deep);
+  cursor: inherit;
+}
+
+.seleccion-casilla input:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 4px;
+}
+
+.item-contenido {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.item-card.is-selected {
+  border-color: var(--accent-deep);
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 2px;
+}
+
+.seleccion-dialogo {
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 24px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.seleccion-dialogo::backdrop {
+  background: rgba(20, 17, 14, 0.65);
+}
+
+.seleccion-dialogo h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.seleccion-dialogo p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.seleccion-dialogo-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .seleccion-barra { top: 68px; }
+  .seleccion-acciones { display: grid; grid-template-columns: 1fr 1fr; }
+  .seleccion-acciones > :first-child { grid-column: 1 / -1; }
+  .seleccion-cabecera .button { padding-inline: 8px; }
+  .seleccion-dialogo { padding: 20px; }
+}
+
 .item-card {
   position: relative;
   padding: 15px 18px 11px;

@@ -21,6 +21,25 @@ local.
 El código se comparte bajo licencia MIT. El despliegue está pensado para un
 solo usuario y depende de las cuotas gratuitas de Cloudflare.
 
+## Seleccionar fotos y archivos
+
+Pulsa **Seleccionar** en la bandeja y marca las fotos o los archivos sobre los
+que quieras actuar. **Seleccionar visibles** incluye solo los que coinciden con
+la búsqueda y el filtro actuales. Cambiar la búsqueda o el filtro limpia la
+selección; **Cancelar selección** vuelve al uso habitual.
+
+- **Descargar ZIP:** prepara una única descarga con los originales, sin
+  recomprimirlos ni enviarlos a otro servicio. Admite hasta 100 MB de contenido
+  por ZIP, muestra el progreso y permite cancelar. Los nombres repetidos reciben
+  un sufijo para que ningún archivo sobrescriba otro al extraerlo.
+- **Eliminar:** pide una sola confirmación y borra los envíos y sus archivos,
+  incluidos los fijados. No se puede deshacer. Si falla alguno, los pendientes
+  siguen seleccionados para reintentar; si caduca la sesión, el lote se detiene.
+
+Si falla una descarga, no se entrega un ZIP incompleto. La selección se conserva
+para volver a intentarlo. Las notas y los enlaces mantienen sus acciones
+individuales; la descarga individual de un archivo sigue entregando el original.
+
 ## Arquitectura
 
 | Parte | Tecnología | Nombre en Cloudflare |
@@ -75,7 +94,7 @@ Necesitas Node.js 24 o superior (las pruebas usan `node:sqlite`).
 npm install
 npm run dev:api     # Wrangler en http://localhost:8787
 npm run dev         # Vite en http://localhost:5173
-npm test            # 56 pruebas automáticas
+npm test            # 86 pruebas automáticas
 npm run build       # comprueba tipos y genera dist/
 ```
 

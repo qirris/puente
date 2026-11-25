@@ -42,6 +42,8 @@
 - [x] Limitar Dependabot a actualizaciones menores y añadir una captura al README.
 
 ## Mejoras posteriores a v1.0.0
+- [x] Seleccionar fotos y archivos de la bandeja para borrar juntos o descargar un ZIP, con pruebas locales y límite de 100 MB.
+- [ ] Revisar, fusionar y publicar la mejora de selección de la bandeja tras la PR correspondiente.
 - [x] Alojar Fraunces y Manrope en `public/fuentes/` y quitar Google Fonts de la CSP.
 - [x] Añadir búsqueda y filtros por tipo en la bandeja.
 - [x] Listar y cerrar sesiones activas.
