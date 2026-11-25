@@ -1,6 +1,6 @@
 // Puente · operaciones de la bandeja contra la API del Worker.
 
-import { api } from './api'
+import { api, ErrorApi } from './api'
 import { config } from './config'
 import { tokenActual } from './sesion'
 import type { HorasDuracion, InboxItem, Item, ItemKind } from './types'
@@ -83,10 +83,13 @@ export async function setPinned(id: string, pinned: boolean): Promise<Item> {
   }
 }
 
-export async function deleteItem(item: Item): Promise<void> {
+export async function deleteItem(item: Item, signal?: AbortSignal): Promise<void> {
   try {
-    await api(`/api/envios/${encodeURIComponent(item.id)}`, { method: 'DELETE' })
+    await api(`/api/envios/${encodeURIComponent(item.id)}`, { method: 'DELETE', signal })
   } catch (error) {
+    if (error instanceof ErrorApi) {
+      throw new ErrorApi(friendlyError(error.message), error.status)
+    }
     throw new Error(friendlyError(error instanceof Error ? error.message : 'Error'))
   }
 }

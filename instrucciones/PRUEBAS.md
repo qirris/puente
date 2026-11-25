@@ -10,7 +10,7 @@ npm run test:watch
 npm run build   # comprueba tipos de aplicación, Worker y pruebas
 ```
 
-Las 60 pruebas están repartidas así:
+Las 86 pruebas están repartidas así:
 
 | Archivo | Qué cubre |
 | --- | --- |
@@ -18,6 +18,9 @@ Las 60 pruebas están repartidas así:
 | `src/lib/format.test.ts` | Tamaños, fechas, caducidad y etiquetas en español. |
 | `src/lib/filtrado.test.ts` | Búsqueda por texto, acentos, nombre de archivo y filtros por tipo. |
 | `src/lib/actualizaciones.test.ts` | Primera instalación, detección de versiones pendientes, activación y coordinación entre pestañas. |
+| `src/lib/descargaZip.test.ts` | ZIP extraíble con originales intactos, duplicados, nombres seguros, límite real de 100 MB, cancelación, desconexión y sesión caducada. |
+| `src/lib/seleccion.test.ts` | Elegibilidad y limpieza de selección; borrado parcial, reintentos 404, cancelación por desmontaje y parada en 401. |
+| `src/hooks/seleccion.test.ts` | React con DOM de prueba: filtros, confirmación en StrictMode, fallos parciales, bloqueo de acciones, cancelación y sondeo concurrente. |
 | `src/index.test.ts` | Registro, acceso, límite de intentos, cabeceras, CORS, sesión en URL, sesiones activas, recuperación, caducidad elegible, archivos y limpieza. |
 
 Las pruebas del Worker usan `tests/bdFalsa.ts`: una base SQLite en memoria con
@@ -27,6 +30,12 @@ API que usa el Worker.
 
 Se necesita Node.js 24 o superior porque `node:sqlite` forma parte de las
 pruebas. La versión también se declara en `engines` y `.nvmrc`.
+
+Las pruebas de hooks y confirmación usan Happy DOM con React. La revisión manual
+de la selección se hace con archivos ficticios en un estado D1/KV local aislado:
+marcar y desmarcar imágenes, cambiar filtros, descargar y extraer el ZIP,
+cancelar la confirmación con Escape y comprobar móvil y escritorio. No utilizar
+la cuenta real ni borrar contenido de producción durante estas comprobaciones.
 
 ## Integración continua
 

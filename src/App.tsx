@@ -15,6 +15,9 @@ import {
 } from './lib/types'
 import { useAuth } from './hooks/useAuth'
 import { useInbox } from './hooks/useInbox'
+import { useSeleccion } from './hooks/useSeleccion'
+import { esSeleccionable } from './lib/seleccion'
+import { BarraSeleccion, ConfirmarBorrado } from './components/BarraSeleccion'
 import { AuthScreen } from './components/AuthScreen'
 import { CodigoUnico } from './components/CodigoUnico'
 import { Composer } from './components/Composer'
@@ -143,10 +146,19 @@ function Pantry({ session, signOut }: PantryProps) {
     [items, busqueda, tipoFiltro],
   )
 
+  const seleccion = useSeleccion({
+    visibles, criterio: JSON.stringify([busqueda, tipoFiltro]), ahora: now, notify,
+    alEliminar: (id) => {
+      removeItem(id)
+      setPreview((actual) => actual?.id === id ? null : actual)
+    },
+  })
+
   const limpiarFiltros = useCallback(() => {
+    if (seleccion.bloqueado) return
     setBusqueda('')
     setTipoFiltro('todos')
-  }, [])
+  }, [seleccion.bloqueado])
 
   const handleSent = useCallback(
     (item: InboxItem) => {
@@ -254,7 +266,17 @@ function Pantry({ session, signOut }: PantryProps) {
             visibles={visibles.length}
             onTexto={setBusqueda}
             onTipo={setTipoFiltro}
+            disabled={seleccion.bloqueado}
           />
+
+          {seleccion.modo ? (
+            <BarraSeleccion seleccion={seleccion} online={online} />
+          ) : seleccion.elegibles.length > 0 ? (
+            <div className="seleccion-inicio">
+              <button type="button" className="button button-small button-quiet" onClick={seleccion.iniciar}>Seleccionar</button>
+              <span>Fotos y archivos para descargar o eliminar juntos</span>
+            </div>
+          ) : null}
 
           {error ? (
             <div className="error-banner" role="alert">
@@ -287,6 +309,10 @@ function Pantry({ session, signOut }: PantryProps) {
                   onPin={handlePin}
                   onDelete={handleDelete}
                   notify={notify}
+                  seleccionando={seleccion.modo && esSeleccionable(item, now)}
+                  seleccionado={seleccion.ids.has(item.id)}
+                  bloqueado={seleccion.operacion !== null}
+                  onSeleccionar={() => seleccion.alternar(item.id)}
                 />
               ))}
             </div>
@@ -309,6 +335,10 @@ function Pantry({ session, signOut }: PantryProps) {
       ) : null}
 
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+
+      {seleccion.confirmando ? (
+        <ConfirmarBorrado cantidad={seleccion.ids.size} cancelar={seleccion.cerrarConfirmacion} confirmar={() => void seleccion.eliminar()} />
+      ) : null}
 
       {preview?.previewUrl ? (
         <Lightbox
@@ -357,5 +387,5 @@ export default function App() {
     )
   }
 
-  return <Pantry session={session} signOut={signOut} />
+  return <Pantry key={session.user.id} session={session} signOut={signOut} />
 }

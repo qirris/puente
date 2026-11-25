@@ -23,6 +23,7 @@ export function useInbox(userId: string | null): UseInboxResult {
   const inFlight = useRef(false)
   const queued = useRef(false)
   const mounted = useRef(true)
+  const revision = useRef(0)
   useEffect(() => {
     mounted.current = true
     return () => {
@@ -39,6 +40,7 @@ export function useInbox(userId: string | null): UseInboxResult {
       }
 
       inFlight.current = true
+      const revisionInicial = revision.current
       if (mode === 'manual') setRefreshing(true)
       if (mode === 'initial') setLoading(true)
 
@@ -48,6 +50,11 @@ export function useInbox(userId: string | null): UseInboxResult {
         })
         const next = await listItems()
         if (!mounted.current) return
+        // Una respuesta iniciada antes de borrar/editar no debe resucitar envíos.
+        if (revisionInicial !== revision.current) {
+          queued.current = true
+          return
+        }
         setItems(next)
         setError(null)
       } catch (err) {
@@ -77,9 +84,13 @@ export function useInbox(userId: string | null): UseInboxResult {
   const refresh = useCallback(() => load('manual'), [load])
   const refreshSilent = useCallback(() => load('silent'), [load])
 
-  const replaceItems = useCallback((next: InboxItem[]) => setItems(next), [])
+  const replaceItems = useCallback((next: InboxItem[]) => {
+    revision.current += 1
+    setItems(next)
+  }, [])
 
   const addItem = useCallback((item: InboxItem) => {
+    revision.current += 1
     setItems((current) => {
       if (current.some((entry) => entry.id === item.id)) return current
       return [item, ...current]
@@ -87,12 +98,14 @@ export function useInbox(userId: string | null): UseInboxResult {
   }, [])
 
   const updateItem = useCallback((item: InboxItem) => {
+    revision.current += 1
     setItems((current) =>
       current.map((entry) => (entry.id === item.id ? { ...entry, ...item } : entry)),
     )
   }, [])
 
   const removeItem = useCallback((id: string) => {
+    revision.current += 1
     setItems((current) => current.filter((entry) => entry.id !== id))
   }, [])
 

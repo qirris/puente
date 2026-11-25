@@ -12,6 +12,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Repositorio: https://github.com/qirris/puente (público desde el 19/11/2026, previa aprobación del usuario).
 - El repo se publicó con licencia MIT, aviso de ámbito personal y registro protegido por código de invitación.
 - Versión actual: v1.1.1, con tag y release publicados el 20/11/2026.
+- Mejora del 25/11/2026 preparada para revisión: selección de fotos/archivos en bandeja, borrado conjunto y descarga ZIP. Sin despliegue de esta mejora en producción.
 - Secreto de Cloudflare `PUENTE_CODIGO_INVITACION` configurado en el Worker `puente-api`; el valor no se guarda en este proyecto.
 - Registro, acceso, envío de texto, subida de archivo y descarga verificados contra la URL pública.
 - El usuario ya creó su cuenta real el 19/11/2026 a las 14:57; los datos de prueba creados durante la revisión se eliminaron.
@@ -38,7 +39,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   - `src/lib/upload.ts`: subida con progreso real mediante XHR.
   - `migrations/0001_init.sql`, `0002_sesiones.sql`, `0003_intentos_acceso.sql`, `0004_sesiones_public_id.sql`, `0005_codigos_recuperacion.sql`, `0006_duracion_envios.sql`: esquema D1.
   - `tests/bdFalsa.ts`: SQLite en memoria y KV falso para probar el Worker.
-  - `src/*.test.ts` y `src/lib/*.test.ts`: 56 pruebas con Vitest.
+  - `src/*.test.ts`, `src/lib/*.test.ts` y `src/hooks/*.test.ts`: 86 pruebas con Vitest; Happy DOM para los hooks de React.
   - `.github/workflows/ci.yml`: comprobación de tipos, build y pruebas.
   - `docs/`: operaciones e historial de Supabase.
   - `wrangler.toml`: configuración de Cloudflare, observabilidad y `run_worker_first`.
@@ -81,6 +82,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
   volver a la app y cada minuto en primer plano con conexión.
 
 ## 6. Cambios realizados
+- 25/11/2026: modo de selección en la bandeja para fotos y archivos, con limpieza al filtrar, confirmación única de borrado, reintentos de fallos parciales y parada por sesión caducada. ZIP generado en cliente con fflate sin recompresión, límite de 100 MB comprobado durante la lectura, nombres seguros y cancelación. Sondeo protegido frente a respuestas antiguas que reintroducían archivos borrados. Sin nuevas rutas ni migraciones; documentación y 26 pruebas nuevas. Trabajo aislado en `codex/seleccion-bandeja`, conservando la documentación pendiente del directorio original.
 - 18/11/2026: proyecto movido a `C:\Users\zakaria\Documents\NEGOCIOS\puente`.
 - 18/11/2026: decisión de migrar a Cloudflare; creación de la base de datos D1 y del esquema adaptado a SQLite.
 - 19/11/2026: renombrado de recursos con nombres ligados a Puente (`puente-datos`, `puente-archivos`, `puente-api`); eliminada la base de datos temporal `puente-db`.
@@ -134,6 +136,7 @@ Aplicación web privada para enviar enlaces, notas, fotos y archivos (hasta 20 M
 - Los saltos mayores de dependencias se revisan a mano: Vite, Vitest y el plugin de React deben actualizarse juntos y un salto puede romper la compilación. Dependabot sigue trayendo solo las versiones menores.
 
 ## 8. Pruebas verificadas
+- 25/11/2026: 86 pruebas y compilación de producción correctas. Navegador local a 1440 y 390 px: selección por casilla/imagen, filtros que limpian selección, ZIP descargado y extraído con originales intactos, confirmación con foco en Cancelar y cierre por Escape. Datos ficticios en D1/KV locales; sin usar cuentas o archivos de producción.
 - 19/11/2026: `npm run build` correcto.
 - 19/11/2026: API local (`wrangler dev --local`) con KV: registro, acceso, creación de envío, listado, fijado, subida de archivo y descarga con token en query. Todas correctas.
 - 19/11/2026: primer despliegue detectó `Pbkdf2 failed: iteration counts above 100000 are not supported`; corregido y vuelto a desplegar.
